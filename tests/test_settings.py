@@ -30,4 +30,3 @@ class TestCoturnSettings(TestCase):
         from django_nats_nkeys.models import NatsAccount, NatsUser
         assert nats_nkeys_settings.get_nats_user_model() is NatsUser
         assert nats_nkeys_settings.get_nats_account_model() is NatsAccount
-

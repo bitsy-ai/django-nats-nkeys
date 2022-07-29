@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
         # create operator with name
         result = subprocess.run(
-            f"nsc init --name {name}", capture_output=True, encoding="utf8", shell=True)
+            f"nsc init --name {name}", capture_output=True, encoding="utf8", shell=True, check=True)
         if result.stderr:
             self.stderr.write(result.stderr)
 
@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
         # print env
         result = subprocess.run(
-            f"nsc env", capture_output=True, encoding="utf8", shell=True)
+            f"nsc env", capture_output=True, encoding="utf8", shell=True, check=True)
 
         if result.stderr:
             self.stderr.write(result.stderr)
@@ -41,18 +41,14 @@ class Command(BaseCommand):
         if result.stdout:
             self.stdout.write(result.stdout)
         result.check_returncode()
-
 
         # set operator context and generate config
         filename = os.path.join(outdir, f"{name}.conf")
         result = subprocess.run(
             f"nsc generate config --nats-resolver --config-file {filename}",capture_output=True, encoding="utf8", shell=True)
+        
         if result.stderr:
             self.stderr.write(result.stderr)
 
         if result.stdout:
             self.stdout.write(result.stdout)
-        result.check_returncode()
-
-        self.stdout.write(self.style.SUCCESS(f'Created {filename}'))
-        self.stdout.write(self.style.SUCCESS(f'You will need to include this in your nats config {filename}'))
