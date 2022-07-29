@@ -1,0 +1,14 @@
+-c requirements.txt
+black
+bump2version
+django-environ
+freezegun
+pytest
+pytest-cov
+pytest-django
+pytest-mock
+tox 
+tox-gh-actions
+twine
+sphinx
+wheel
