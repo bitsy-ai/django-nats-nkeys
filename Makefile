@@ -80,3 +80,6 @@ migrations:
 
 migrate:
 	docker-compose -f docker/local.yml run --rm django python manage.py migrate
+
+operator:
+	docker-compose -f docker/local.yml run --rm django python manage.py nsc_init

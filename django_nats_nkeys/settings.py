@@ -2,10 +2,21 @@ from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
-from organizations.models import Organization, OrganizationUser
 from organizations.abstract import AbstractOrganization, AbstractOrganizationUser
 
 class DjangoNatsNkeySettings:
+
+    @property
+    def NATS_NKEYS_OUTDIR(self) -> str:
+        return getattr(settings, "NATS_NKEYS_CONFIG_DIR", ".nats/")
+
+    @property
+    def NATS_SERVER_URI(self) -> str:
+        return getattr(settings, "NATS_SERVER_URI", "nats://nats:4222")
+
+    @property
+    def NATS_NKEYS_OPERATOR_NAME(self) -> str:
+        return getattr(settings, "NATS_NKEYS_OPERATOR_NAME", "DjangoOperator")
 
     def get_nats_account_model_string(self) -> str:
         """Get the configured subscriber model as a module path string."""

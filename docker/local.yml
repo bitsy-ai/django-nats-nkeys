@@ -2,6 +2,7 @@ version: "3"
 
 volumes:
   local_postgres_data: {}
+  local_nats_account_conf: {}
 services:
   django: &django # enables use of pdb
     hostname: django
@@ -24,11 +25,26 @@ services:
       - ./start
   postgres:
     hostname: postgres
-    image: postgres:12.3
-    container_name: postgres_coturn
+    image: postgres:14
+    container_name: django_nats_nkeys_postgres
     volumes:
       - local_postgres_data:/var/lib/postgresql/data:z
     env_file:
       - test.env
     ports:
       - "5432:5432"
+  nats:
+    hostname: nats
+    image: nats:2.8-alpine
+    container_name: django_nats_nkeys_nats
+    volumes:
+      - ../.nats/:/etc/nats
+    env_file:
+      - test.env
+    command:
+      - -c
+      - /etc/nats/nats-server.conf
+      - --name
+      - localnats
+    ports:
+      - "4222:4222"
