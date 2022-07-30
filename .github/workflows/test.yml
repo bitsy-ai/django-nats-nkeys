@@ -30,7 +30,8 @@ jobs:
       - name: Run Pytest
         run: |
           make docker-up-d
-          make nsc-init
+          make venv
+          . .venv/bin/activate
           make pytest
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
