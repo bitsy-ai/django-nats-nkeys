@@ -10,8 +10,6 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-env:
-  COMPOSE_INTERACTIVE_NO_CLI: 1
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -30,7 +28,7 @@ jobs:
       - name: Run Pytest
         run: |
           make docker-up-d
-          make pytest
+          make pytest-ci
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
