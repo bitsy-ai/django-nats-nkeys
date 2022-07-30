@@ -6,17 +6,19 @@
 #
 asgiref==3.4.1
     # via django
+coolname==1.1.0
+    # via django-nats-nkeys (setup.py)
 django==3.2.7
     # via
     #   django-extensions
-    #   django-nats-nkey (setup.py)
+    #   django-nats-nkeys (setup.py)
     #   django-organizations
 django-extensions==3.2.0
-    # via django-nats-nkey (setup.py)
+    # via django-nats-nkeys (setup.py)
 django-organizations==2.0.2
-    # via django-nats-nkey (setup.py)
+    # via django-nats-nkeys (setup.py)
 psycopg2==2.9.1
-    # via django-nats-nkey (setup.py)
+    # via django-nats-nkeys (setup.py)
 pytz==2021.1
     # via django
 six==1.16.0

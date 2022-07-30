@@ -2,12 +2,11 @@ from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
-from organizations.abstract import AbstractOrganization, AbstractOrganizationUser
+
 
 class DjangoNatsNkeySettings:
-
     @property
-    def NATS_NKEYS_OUTDIR(self) -> str:
+    def NATS_NKEYS_EXPORT_DIR(self) -> str:
         return getattr(settings, "NATS_NKEYS_CONFIG_DIR", ".nats/")
 
     @property
@@ -18,10 +17,36 @@ class DjangoNatsNkeySettings:
     def NATS_NKEYS_OPERATOR_NAME(self) -> str:
         return getattr(settings, "NATS_NKEYS_OPERATOR_NAME", "DjangoOperator")
 
+    def get_nats_app_model_string(self) -> str:
+        return getattr(settings, "NATS_APP_MODEL", "django_nats_nkeys.NatsApp")
+
+    def get_naps_app_model(self) -> Model:
+        model_name = self.get_naps_app_model()
+        try:
+            nats_app_model = django_apps.get_model(model_name)
+        except ValueError:
+            raise ImproperlyConfigured(
+                "NATS_APP_MODEL must be of the form 'app_label.model_name'."
+            )
+        except LookupError:
+            raise ImproperlyConfigured(
+                "NATS_APP_MODEL refers to model '{model}' "
+                "that has not been installed.".format(model=model_name)
+            )
+        from django_nats_nkeys.models import AbstractNatsApp
+
+        if not issubclass(nats_app_model, AbstractNatsApp):
+            raise ImproperlyConfigured(
+                "NATS_ACCOUNT_MODEL must subclass django_nats_nkey.models.NatsApp"
+            )
+        return nats_app_model
+
     def get_nats_account_model_string(self) -> str:
         """Get the configured subscriber model as a module path string."""
-        return getattr(settings, "NATS_ACCOUNT_MODEL", "django_nats_nkeys.NatsAccount")
-    
+        return getattr(
+            settings, "NATS_ACCOUNT_MODEL", "django_nats_nkeys.NatsOrganization"
+        )
+
     def get_nats_account_model(self) -> Model:
         """
         Attempt to read settings.NATS_ACCOUNT_MODEL
@@ -41,16 +66,20 @@ class DjangoNatsNkeySettings:
                 "NATS_ACCOUNT_MODEL refers to model '{model}' "
                 "that has not been installed.".format(model=model_name)
             )
-        if not issubclass(nats_account_model, AbstractOrganization):
+        from django_nats_nkeys.models import NatsOrganization
+
+        if not issubclass(nats_account_model, NatsOrganization):
             raise ImproperlyConfigured(
-                "NATS_ACCOUNT_MODEL must subclass or proxy organizations.abstract.AbstractOrganization"
+                "NATS_ACCOUNT_MODEL must subclass django_nats_nkeys.models.NatsAccount"
             )
         return nats_account_model
 
     def get_nats_user_model_string(self) -> str:
         """Get the configured subscriber model as a module path string."""
-        return getattr(settings, "NATS_USER_MODEL", "django_nats_nkeys.NatsUser")
-    
+        return getattr(
+            settings, "NATS_USER_MODEL", "django_nats_nkeys.NatsOrganizationUser"
+        )
+
     def get_nats_user_model(self) -> Model:
         """
         Attempt to read settings.NATS_USER_MODEL
@@ -70,11 +99,11 @@ class DjangoNatsNkeySettings:
                 "NATS_USER_MODEL refers to model '{model}' "
                 "that has not been installed.".format(model=model_name)
             )
-        
+        from django_nats_nkeys.models import NatsOrganizationUser
 
-        if not issubclass(nats_user_model, AbstractOrganizationUser):
+        if not issubclass(nats_user_model, NatsOrganizationUser):
             raise ImproperlyConfigured(
-                "NATS_USER_MODEL must subclass or proxy organizations.abstract.AbstractOrganizationUser"
+                "NATS_USER_MODEL must subclass or proxy django_nats_nkeys.models.NatsOrganizationUser"
             )
         return nats_user_model
 

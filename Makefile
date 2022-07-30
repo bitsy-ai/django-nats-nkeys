@@ -20,7 +20,16 @@ clean-pyc: ## remove Python file artifacts
 	rm -fr .eggs/
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -rf {} +
+
 clean: clean-dist clean-pyc
+
+clean-operator:
+	sudo chown -R $(USER) .
+	docker-compose -f docker/local.yml exec django python manage.py nsc_clean || docker-compose -f docker/local.yml stop
+	docker-compose -f docker/local.yml stop
+	docker-compose -f docker/local.yml rm
+	docker volume prune
+
 
 sdist: ## builds source package
 	$(PYTHON) setup.py sdist && ls -l dist
@@ -64,22 +73,31 @@ images:
 	docker-compose -f docker/local.yml build
 
 pytest:
-	docker-compose -f docker/local.yml run --rm django pytest
+	docker-compose -f docker/local.yml exec django pytest
 
 tox:
-	docker-compose -f docker/local.yml run --rm django tox
+	docker-compose -f docker/local.yml exec django tox
 
 dev:
 	docker-compose -f docker/local.yml up
 
 superuser:
-	docker-compose -f docker/local.yml run --rm django python manage.py createsuperuser
+	docker-compose -f docker/local.yml exec django python manage.py createsuperuser
 
 migrations:
-	docker-compose -f docker/local.yml run --rm django python manage.py makemigrations
+	docker-compose -f docker/local.yml exec django python manage.py makemigrations
 
 migrate:
-	docker-compose -f docker/local.yml run --rm django python manage.py migrate
+	docker-compose -f docker/local.yml exec django python manage.py migrate
 
-operator:
-	docker-compose -f docker/local.yml run --rm django python manage.py nsc_init
+nsc-init:
+	docker-compose -f docker/local.yml exec django python manage.py nsc_init
+	docker-compose -f docker/local.yml restart nats
+
+nsc-env:
+	docker-compose -f docker/local.yml exec django python manage.py nsc_env
+
+docker-up:
+	docker-compose -f docker/local.yml up
+
+up: docker-up nsc-init
