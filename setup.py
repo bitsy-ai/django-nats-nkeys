@@ -28,7 +28,6 @@ setup(
     keywords="django NATS",
     url="http://github.com/bitsy-ai/django-nats-nkey",
     classifiers=[
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Framework :: Django",
