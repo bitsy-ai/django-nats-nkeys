@@ -98,4 +98,4 @@ nsc-env:
 	docker-compose -f docker/local.yml exec django python manage.py nsc_env
 
 docker-up-d:
-	docker-compose -d -f docker/local.yml up
+	docker-compose -f docker/local.yml -d up
