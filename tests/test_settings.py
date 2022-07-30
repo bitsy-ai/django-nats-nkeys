@@ -11,7 +11,7 @@ from django_nats_nkeys.settings import nats_nkeys_settings
 class TestCoturnSettings(TestCase):
     def setUp(self):
         return super().setUp()
-    
+
     @override_settings(NATS_NKEYS_OPERATOR_NAME="MyCustomOperator")
     def test_custom_operator_name(self):
         assert nats_nkeys_settings.NATS_NKEYS_OPERATOR_NAME == "MyCustomOperator"
@@ -27,6 +27,7 @@ class TestCoturnSettings(TestCase):
             nats_nkeys_settings.get_nats_user_model()
 
     def test_defaults_valid(self):
-        from django_nats_nkeys.models import NatsAccount, NatsUser
-        assert nats_nkeys_settings.get_nats_user_model() is NatsUser
-        assert nats_nkeys_settings.get_nats_account_model() is NatsAccount
+        from django_nats_nkeys.models import NatsOrganization, NatsOrganizationUser
+
+        assert nats_nkeys_settings.get_nats_user_model() is NatsOrganizationUser
+        assert nats_nkeys_settings.get_nats_account_model() is NatsOrganization

@@ -1,4 +1,3 @@
-import subprocess
 import os
 
 from click import BaseCommand
@@ -18,12 +17,6 @@ class Command(BaseCommand):
             default=nats_nkeys_settings.NATS_NKEYS_OPERATOR_NAME,
         )
         parser.add_argument(
-            "--server",
-            type=str,
-            help="Nats server URI",
-            default=nats_nkeys_settings.NATS_SERVER_URI,
-        )
-        parser.add_argument(
             "--outdir",
             type=str,
             help="Output signing key for offline/cold storage",
@@ -33,5 +26,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         name = kwargs.get("name")
         outdir = kwargs.get("outdir")
-        server = kwargs.get("server")
-        init_nsc_operator(name, outdir, server, stdout=self.stdout, stderr=self.stderr)
+        filename = os.path.join(outdir, f"{name}.conf")
+        try:
+            os.remove(filename)
+            self.stdout.write(self.style.SUCCESS(f"Deleted {filename}"))
+        except FileNotFoundError:
+            self.stderr.write(self.style.NOTICE(f"File not found {filename}"))

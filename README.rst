@@ -3,26 +3,27 @@
 Django Coturn
 ==============
 
-.. image:: https://img.shields.io/pypi/v/django-coturn
-    :target: https://pypi.org/project/django-coturn/
-.. image:: https://img.shields.io/pypi/pyversions/django-coturn
-    :target: https://pypi.org/project/django-coturn/
-.. image:: https://img.shields.io/pypi/djversions/django-coturn
-    :target: https://pypi.org/project/django-coturn/
-.. image:: https://img.shields.io/pypi/wheel/django-coturn
-    :target: https://pypi.org/project/django-coturn/
+.. image:: https://img.shields.io/pypi/v/django-nats-nkeys
+    :target: https://pypi.org/project/django-nats-nkeys/
+.. image:: https://img.shields.io/pypi/pyversions/django-nats-nkeys
+    :target: https://pypi.org/project/django-nats-nkeys/
+.. image:: https://img.shields.io/pypi/djversions/django-nats-nkeys
+    :target: https://pypi.org/project/django-nats-nkeys/
+.. image:: https://img.shields.io/pypi/wheel/django-nats-nkeys
+    :target: https://pypi.org/project/django-nats-nkeys/
 .. image:: https://img.shields.io/discord/773452324692688956
     :target: https://discord.gg/Y848Hq9xKh
-.. image:: https://img.shields.io/github/workflow/status/bitsy-ai/django-coturn/Test
-    :target: https://github.com/bitsy-ai/django-coturn
-.. image:: https://img.shields.io/codecov/c/github/bitsy-ai/django-coturn
-    :target: https://github.com/bitsy-ai/django-coturn
-.. image:: https://img.shields.io/github/release-date-pre/bitsy-ai/django-coturn
-    :target: https://github.com/bitsy-ai/django-coturn
+.. image:: https://img.shields.io/github/workflow/status/bitsy-ai/django-nats-nkeys/Test
+    :target: https://github.com/bitsy-ai/django-nats-nkeys
+.. image:: https://img.shields.io/codecov/c/github/bitsy-ai/django-nats-nkeys
+    :target: https://github.com/bitsy-ai/django-nats-nkeys
+.. image:: https://img.shields.io/github/release-date-pre/bitsy-ai/django-nats-nkeys
+    :target: https://github.com/bitsy-ai/django-nats-nkeys
 
-Django Coturn is a Django app to synchronize django admins/users with Coturn's user database. Coturn is an open-source STUN/TURN/ICE server. 
 
-https://github.com/coturn/coturn
+[NATS](https://docs.nats.io/nats-concepts/what-is-nats) is an infrastructure platform for building message-based services.
+
+This Django app integrates NAT's [multi-tenant account](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts) paradigm with [Django organizations](https://github.com/bennylope/django-organizations).
 
 Quick start
 -----------
@@ -36,32 +37,21 @@ Quick start
         "django_nats_nkey",
     ]
 
-2. Create an empty `coturn` database
+2. Run ``python manage.py migrate`` to create the NATS organizationals models
 
-3. Configure the following in your settings.py::
-
-    DATABASES = {
-        ... your default and auxilary database configs
-        "coturn": env.db("COTURN_DATABASE_URL")
-    }
-
-    COTURN_REALM = "turn.example-domain.com"
-    COTURN_SECRET_KEY = "127 character secret"
-
-2. Run ``python manage.py migrate`` to create the coturn models.
-
-5. Run ``python manage.py sync_coturn {turn_secret,turn_admin,turn_user}`` to sync users/admin data to coturn tables. You only need to do this once per table - subsequent updates will be handled by Django signals.
+5. Run ``python manage.py nsc-init`` (optional) Initialize a new NATS operator. You are responsible for copying the generated `.conf` file to your NATS server. If you choose to use an existing operator, you are responsible for running `nsc pull` as a pre-deployment step. 
 
 Contributor's Guide
 --------------------
 
 1. Create a development environment (requires docker & docker-compose)::
 
-    make dev
+    make docker-up
+    make nsc-init
 
 2. Run tests and generate a coverage report::
 
-    make tests
+    make pytest
 
 3. Run `black` linter::
 

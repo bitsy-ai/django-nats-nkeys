@@ -1,17 +1,22 @@
-from unittest.mock import patch
-from django.test import TestCase, override_settings
-from datetime import datetime, timezone, tzinfo
-from freezegun import freeze_time
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django_nats_nkeys.services import create_nats_account_org, create_nats_app
+from coolname import generate_slug
 
-# class TestServices(TestCase):
-#     @override_settings(COTURN_CREDENTIAL_MAX_AGE=3600)
-#     def test_get_expiration_timestamp_default(self):
-#         expected = int(datetime(2021, 9, 14, 1, tzinfo=timezone.utc).timestamp())
-#         with freeze_time("2021-09-14 00:00:00", tz_offset=0):
-#             actual = _get_expiration_timestamp()
-#         assert expected == actual
+User = get_user_model()
 
-#     # def test_create_turn_api_credentials(self):
-#     #     mock_datetime_now = datetime
-#     #     email = "test-user@test.com"
-#     #     username, password = create_turn_api_credentials(email)
+
+class TestServices(TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.user = User.objects.create(
+            email="admin@test.com", password="testing1234", is_superuser=False
+        )
+
+    def test_create_nats_app(self):
+        org = create_nats_account_org(self.user)
+        assert org.name == org.json.get("name")
+
+        app = create_nats_app(self.user, org)
+
+        assert app.org == org
