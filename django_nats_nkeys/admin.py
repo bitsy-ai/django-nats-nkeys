@@ -1,55 +1,36 @@
 from django.contrib import admin
 
-# from .models import (
-#     TurnAdmin,
-#     TurnUser,
-#     AllowedPeerIp,
-#     DeniedPeerIp,
-#     OauthKey,
-#     TurnOriginToRealm,
-#     TurnRealmOption,
-#     TurnSecret,
-# )
+from .models import NatsOrganization, NatsAccountOwner, NatsApp, NatsOrganizationUser
+from organizations.models import (
+    Organization,
+    OrganizationUser,
+    OrganizationOwner,
+    OrganizationInvitation,
+)
 
 
-# @admin.register(TurnAdmin)
-# class TurnAdminView(admin.ModelAdmin):
-#     list_display = ("name", "realm", "django_user_id")
+@admin.register(NatsOrganization)
+class NatsOrganizationAdmin(admin.ModelAdmin):
+    pass
 
 
-# @admin.register(TurnUser)
-# class TurnUserAdmin(admin.ModelAdmin):
-#     list_display = ("name", "realm", "django_user_id")
+@admin.register(NatsApp)
+class NatsOrganizationAdmin(admin.ModelAdmin):
+    pass
 
 
-# @admin.register(AllowedPeerIp)
-# class AllowedPeerIpAdmin(admin.ModelAdmin):
-#     list_display = ("realm", "ip_range")
+@admin.register(NatsAccountOwner)
+class NatsAccountOwnerAdmin(admin.ModelAdmin):
+    pass
 
 
-# @admin.register(DeniedPeerIp)
-# class DeniedPeerIpAdmin(admin.ModelAdmin):
-#     list_display = ("realm", "ip_range")
+@admin.register(NatsOrganizationUser)
+class NatsAccountOwnerAdmin(admin.ModelAdmin):
+    pass
 
 
-# @admin.register(OauthKey)
-# class OauthKeyAdmin(admin.ModelAdmin):
-#     list_display = ("kid", "ikm_key", "timestamp", "lifetime", "as_rs_alg", "realm")
-
-
-# @admin.register(TurnOriginToRealm)
-# class TurnOriginToRealm(admin.ModelAdmin):
-#     list_display = ("origin", "realm")
-
-
-# @admin.register(TurnRealmOption)
-# class TurnRealmOption(admin.ModelAdmin):
-#     list_display = ("opt", "realm", "value")
-
-
-# @admin.register(TurnSecret)
-# class TurnRealmOption(admin.ModelAdmin):
-#     list_display = (
-#         "realm",
-#         "value",
-#     )
+# unregister django organization defaults and register our own
+admin.site.unregister(Organization)
+admin.site.unregister(OrganizationUser)
+admin.site.unregister(OrganizationOwner)
+admin.site.unregister(OrganizationInvitation)
