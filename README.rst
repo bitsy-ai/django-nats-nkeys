@@ -21,14 +21,19 @@ Django Coturn
     :target: https://github.com/bitsy-ai/django-nats-nkeys
 
 
-[NATS](https://docs.nats.io/nats-concepts/what-is-nats) is an infrastructure platform for building message-based services.
+NATS_ is an infrastructure platform for building message-based services.
 
-This Django app integrates NAT's [multi-tenant account](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts) paradigm with [Django organizations](https://github.com/bennylope/django-organizations).
+.. _NATS: https://docs.nats.io/nats-concepts/what-is-nats
+
+This Django app integrates NAT's _multi-tenant account paradigm with `Django organizations`.
+
+.. _multi-tenant: https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
+.. _Django organizations: https://github.com/bennylope/django-organizations
 
 Quick start
 -----------
 
-1. Add to your INSTALLED_APPS settings:
+1. Add to your INSTALLED_APPS settings::
 
     INSTALLED_APPS = [
         ...
@@ -39,7 +44,7 @@ Quick start
 
 2. Run ``python manage.py migrate`` to create the NATS organizationals models
 
-5. Run ``python manage.py nsc-init`` (optional) Initialize a new NATS operator. You are responsible for copying the generated `.conf` file to your NATS server. If you choose to use an existing operator, you are responsible for running `nsc pull` as a pre-deployment step. 
+3. Run ``python manage.py nsc-init`` (optional) Initialize a new NATS operator. You are responsible for copying the generated `.conf` file to your NATS server. If you choose to use an existing operator, you are responsible for running `nsc pull` as a pre-deployment step. 
 
 Contributor's Guide
 --------------------
