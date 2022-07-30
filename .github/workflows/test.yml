@@ -32,7 +32,7 @@ jobs:
           make docker-up-d
           make venv
           . .venv/bin/activate
-          make pytest
+          pyest
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
