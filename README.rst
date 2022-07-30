@@ -46,7 +46,7 @@ Contributor's Guide
 
 1. Create a development environment (requires docker & docker-compose)::
 
-    make docker-up-d
+    make docker-up
     make nsc-init
 
 2. Run tests and generate a coverage report::
