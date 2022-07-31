@@ -42,7 +42,7 @@ def nsc_init_operator(name, outdir, server, stdout=None, stderr=None) -> str:
     # generate a signing key for operator
     run_and_log_output(["nsc", "edit", "operator", "--sk", "generate"])
     # add account-jwt-server-url to operator
-    run_and_log_output(["nsc", "edit", "operator", "--acount-jwt-server-url"])
+    run_and_log_output(["nsc", "edit", "operator", "--account-jwt-server-url", server])
 
     # set operator context and generate config
     filename = os.path.join(outdir, f"{name}.conf")
@@ -52,7 +52,7 @@ def nsc_init_operator(name, outdir, server, stdout=None, stderr=None) -> str:
             "generate",
             "config",
             "--force",
-            "--nats-reseolver",
+            "--nats-resolver",
             "--config-file",
             filename,
         ]

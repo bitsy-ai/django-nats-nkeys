@@ -18,7 +18,6 @@ RUN apt-get update \
 # install nsc command-line tool
 RUN wget https://github.com/nats-io/nsc/releases/download/2.7.1/nsc-linux-amd64.zip -O nsc-linux-amd64.zip
 RUN unzip nsc-linux-amd64.zip -d /usr/local/bin
-RUN mkdir -p /var/lib/nats/nsc/stores
 
 RUN mkdir /workspace
 WORKDIR /workspace
