@@ -4,8 +4,10 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ !-z "${NSC_STORE}" ]; then
-    nsc env --store $NSC_STORE 
+if [ -z "${NSC_STORE}" ]; then
+    echo "WARNING: NSC_STORE variable is not set! The default nsc store location will be used"
+else
+    nsc env --store "$NSC_STORE"
 fi
 
 if [ -z "${POSTGRES_USER}" ]; then
