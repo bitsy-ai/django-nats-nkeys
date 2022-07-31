@@ -3,17 +3,13 @@ import json
 import os
 from organizations.utils import create_organization
 from django.contrib.auth import get_user_model
-from django_nats_nkeys.models import (
-    NatsOrganization,
-    NatsOrganization,
-    NatsOrganizationUser,
-    NatsApp,
-)
 from django_nats_nkeys.settings import nats_nkeys_settings
 from coolname import generate_slug
 
 
 User = get_user_model()
+NatsOrganization = nats_nkeys_settings.get_nats_account_model()
+NatsApp = nats_nkeys_settings.get_nats_app_model()
 
 
 def init_nsc_operator(name, outdir, server, stdout=None, stderr=None):

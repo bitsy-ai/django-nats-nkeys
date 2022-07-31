@@ -1,12 +1,18 @@
 from django.contrib import admin
 
-from .models import NatsOrganization, NatsAccountOwner, NatsApp, NatsOrganizationUser
+from django_nats_nkeys.settings import nats_nkeys_settings
+
 from organizations.models import (
     Organization,
     OrganizationUser,
     OrganizationOwner,
     OrganizationInvitation,
 )
+
+NatsOrganization = nats_nkeys_settings.get_nats_account_model()
+NatsOrganizationOwner = nats_nkeys_settings.get_nats_account_owner_model()
+NatsApp = nats_nkeys_settings.get_nats_app_model()
+NatsOrganizationUser = nats_nkeys_settings.get_nats_user_model()
 
 
 @admin.register(NatsOrganization)
@@ -19,8 +25,8 @@ class NatsOrganizationAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(NatsAccountOwner)
-class NatsAccountOwnerAdmin(admin.ModelAdmin):
+@admin.register(NatsOrganizationOwner)
+class NatsOrganizationOwnerAdmin(admin.ModelAdmin):
     pass
 
 

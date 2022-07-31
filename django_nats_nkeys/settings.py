@@ -17,11 +17,15 @@ class DjangoNatsNkeySettings:
     def NATS_NKEYS_OPERATOR_NAME(self) -> str:
         return getattr(settings, "NATS_NKEYS_OPERATOR_NAME", "DjangoOperator")
 
-    def get_nats_app_model_string(self) -> str:
-        return getattr(settings, "NATS_APP_MODEL", "django_nats_nkeys.NatsApp")
+    def get_nats_account_owner_model_string(self) -> str:
+        return getattr(
+            settings,
+            "NATS_ACCOUNT_OWNER_MODEL",
+            "django_nats_nkeys.NatsOrganizationOwner",
+        )
 
-    def get_naps_app_model(self) -> Model:
-        model_name = self.get_naps_app_model()
+    def get_nats_account_owner_model(self) -> Model:
+        model_name = self.get_nats_account_owner_model_string()
         try:
             nats_app_model = django_apps.get_model(model_name)
         except ValueError:
@@ -33,12 +37,36 @@ class DjangoNatsNkeySettings:
                 "NATS_APP_MODEL refers to model '{model}' "
                 "that has not been installed.".format(model=model_name)
             )
-        from django_nats_nkeys.models import AbstractNatsApp
+        from django_nats_nkeys.models import NatsOrganizationOwner
 
-        if not issubclass(nats_app_model, AbstractNatsApp):
+        if not issubclass(nats_app_model, NatsOrganizationOwner):
             raise ImproperlyConfigured(
-                "NATS_ACCOUNT_MODEL must subclass django_nats_nkey.models.NatsApp"
+                "NATS_ACCOUNT_MODEL must subclass django_nats_nkey.models.NatsOrganizationOwner"
             )
+        return nats_app_model
+
+    def get_nats_app_model_string(self) -> str:
+        return getattr(settings, "NATS_APP_MODEL", "django_nats_nkeys.NatsApp")
+
+    def get_nats_app_model(self) -> Model:
+        model_name = self.get_nats_app_model_string()
+        try:
+            nats_app_model = django_apps.get_model(model_name)
+        except ValueError:
+            raise ImproperlyConfigured(
+                "NATS_APP_MODEL must be of the form 'app_label.model_name'."
+            )
+        except LookupError:
+            raise ImproperlyConfigured(
+                "NATS_APP_MODEL refers to model '{model}' "
+                "that has not been installed.".format(model=model_name)
+            )
+        # from django_nats_nkeys.models import NatsApp
+
+        # if not issubclass(nats_app_model, NatsApp):
+        #     raise ImproperlyConfigured(
+        #         "NATS_ACCOUNT_MODEL must subclass django_nats_nkey.models.NatsApp"
+        #     )
         return nats_app_model
 
     def get_nats_account_model_string(self) -> str:
