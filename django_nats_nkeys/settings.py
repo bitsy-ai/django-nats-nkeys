@@ -61,12 +61,12 @@ class DjangoNatsNkeySettings:
                 "NATS_APP_MODEL refers to model '{model}' "
                 "that has not been installed.".format(model=model_name)
             )
-        # from django_nats_nkeys.models import NatsApp
+        from django_nats_nkeys.models import AbstractNatsApp
 
-        # if not issubclass(nats_app_model, NatsApp):
-        #     raise ImproperlyConfigured(
-        #         "NATS_ACCOUNT_MODEL must subclass django_nats_nkey.models.NatsApp"
-        #     )
+        if not issubclass(nats_app_model, AbstractNatsApp):
+            raise ImproperlyConfigured(
+                "NATS_ACCOUNT_MODEL must subclass django_nats_nkey.models.AbstractNatsApp"
+            )
         return nats_app_model
 
     def get_nats_account_model_string(self) -> str:
