@@ -37,7 +37,7 @@ class AbstractNatsApp(models.Model):
     org_user = models.ForeignKey(NatsOrganizationUser, on_delete=models.CASCADE)
     org = models.ForeignKey(NatsOrganization, on_delete=models.CASCADE)
     json = models.JSONField(
-        max_length=255, help_text="Output of `nsc describe account`", default=dict
+        max_length=255, help_text="Output of `nsc describe account`"
     )
 
 

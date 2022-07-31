@@ -74,6 +74,37 @@ def nsc_push_org(org: NatsOrganization) -> subprocess.CompletedProcess:
     )
 
 
+def create_nats_sk_service(
+    org: NatsOrganization, role: str = "service"
+) -> NatsOrganization:
+    """
+    Add signing key to NATS account with --role <role>
+
+    The service designing key may be used as a permissions delegate, managing authorizations of all app/users credentials signed by service key
+    """
+    run_and_log_output(
+        [
+            "nsc",
+            "edit",
+            "signing-key",
+            "--account",
+            org.name,
+            "--role",
+            role,
+            "--sk",
+            org.json["nats"]["signing_keys"][0],
+        ]
+    )
+    # re-run describe to output public signing key fingerprint, public key, claims
+    result = run_and_log_output(["nsc", "describe", "account", org.name, "--json"])
+    describe_account = json.loads(result.stdout)
+    # push to remote
+    nsc_push_org(org)
+    org.json = describe_account
+    org.save()
+    return org
+
+
 def create_nats_account_org(user: User) -> NatsOrganization:
     # create organization
     org = create_organization(
@@ -89,10 +120,14 @@ def create_nats_account_org(user: User) -> NatsOrganization:
     run_and_log_output(
         ["nsc", "edit", "account", "--name", org.name, "--sk", "generate"]
     )
-
+    # push to remote
+    nsc_push_org(org)
     result = run_and_log_output(["nsc", "describe", "account", org.name, "--json"])
     describe_account = json.loads(result.stdout)
+    org.json = describe_account
+    org.save()
 
+    org = create_nats_sk_service(org)
     # add service for account (log non-sensitive public key subject)
     run_and_log_output(
         [
@@ -107,14 +142,6 @@ def create_nats_account_org(user: User) -> NatsOrganization:
             describe_account["nats"]["signing_keys"][0],
         ]
     )
-
-    # re-run describe to output public signing key fingerprint, public key, claims
-    result = run_and_log_output(["nsc", "describe", "account", org.name, "--json"])
-    describe_account = json.loads(result.stdout)
-    # push to remote
-    nsc_push_org(org)
-    org.json = describe_account
-    org.save()
     return org
 
 
