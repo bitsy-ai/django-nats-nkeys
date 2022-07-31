@@ -1,4 +1,6 @@
 import subprocess
+from typing import List
+import logging
 import json
 import os
 from organizations.utils import create_organization
@@ -7,71 +9,60 @@ from django_nats_nkeys.settings import nats_nkeys_settings
 from coolname import generate_slug
 
 
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 NatsOrganization = nats_nkeys_settings.get_nats_account_model()
 NatsApp = nats_nkeys_settings.get_nats_app_model()
 
 
-def nsc_init_operator(name, outdir, server, stdout=None, stderr=None):
+def run_and_log_output(
+    cmd: List[str], stdout=True, stderr=True
+) -> subprocess.CompletedProcess:
+    result = subprocess.run(cmd, capture_output=True, encoding="utf8")
+    if result.stdout and stdout:
+        logger.info(result.stdout)
+
+    if result.stderr and stderr:
+        logger.error(result.stderr)
+
+    result.check_returncode()
+    return result
+
+
+def nsc_init_operator(name, outdir, server, stdout=None, stderr=None) -> str:
+    """
+    One-time setup of settings.NATS_NKEYS_OPERATOR_NAME
+    """
     # create operator with system account
     # https://docs.nats.io/running-a-nats-service/nats_admin/security/jwt#system-account
-    result = subprocess.run(
-        f"nsc add operator --name {name} --sys",
-        capture_output=True,
-        encoding="utf8",
-        shell=True,
-    )
-    if result.stderr and stderr:
-        stderr.write(result.stderr)
-    if result.stdout and stdout:
-        stdout.write(result.stdout)
-    result.check_returncode()
 
-    # generate and add signing key for operator
-    result = subprocess.run(
-        f"nsc edit operator --sk generate",
-        capture_output=True,
-        encoding="utf8",
-        shell=True,
-    )
-    if result.stderr and stderr:
-        stderr.write(result.stderr)
-    if result.stdout and stdout:
-        stdout.write(result.stdout)
-    result.check_returncode()
-
+    # initialize operator
+    run_and_log_output(["nsc", "add", "operator", "--name", name, "--sys"])
+    # generate a signing key for operator
+    run_and_log_output(["nsc", "edit", "operator", "--sk", "generate"])
     # add account-jwt-server-url to operator
-    result = subprocess.run(
-        f"nsc edit operator --account-jwt-server-url {server}",
-        capture_output=True,
-        encoding="utf8",
-        shell=True,
-    )
-    if result.stderr and stderr:
-        stderr.write(result.stderr)
-    if result.stdout and stdout:
-        stdout.write(result.stdout)
-    result.check_returncode()
+    run_and_log_output(["nsc", "edit", "operator", "--acount-jwt-server-url"])
 
     # set operator context and generate config
     filename = os.path.join(outdir, f"{name}.conf")
-    result = subprocess.run(
-        f"nsc generate config --force --nats-resolver --config-file {filename}",
-        capture_output=True,
-        encoding="utf8",
-        shell=True,
+    run_and_log_output(
+        [
+            "nsc",
+            "generate",
+            "config",
+            "--force",
+            "--nats-reseolver",
+            "--config-file",
+            filename,
+        ]
     )
-
-    if result.stderr and stderr:
-        stderr.write(result.stderr)
-
-    if result.stdout and stdout:
-        stdout.write(result.stdout)
+    return filename
 
 
-def nsc_push_org(org: NatsOrganization) -> None:
+def nsc_push_org(org: NatsOrganization) -> subprocess.CompletedProcess:
     # push to remote
-    subprocess.run(
+    return run_and_log_output(
         [
             "nsc",
             "push",
@@ -79,9 +70,7 @@ def nsc_push_org(org: NatsOrganization) -> None:
             org.name,
             "--account-jwt-server-url",
             nats_nkeys_settings.NATS_SERVER_URI,
-        ],
-        check=True,
-        capture_output=True,
+        ]
     )
 
 
@@ -94,26 +83,18 @@ def create_nats_account_org(user: User) -> NatsOrganization:
         org_model=nats_nkeys_settings.get_nats_account_model(),
         org_user_model=nats_nkeys_settings.get_nats_user_model(),
     )
-    # create account via nsc
-    subprocess.run(
-        ["nsc", "add", "account", "--name", org.name], check=True, capture_output=True
+    # create account via nsc (log non-sensitive public key subject)
+    run_and_log_output(["nsc", "add", "account", "--name", org.name])
+    # generate a signing key for account (log non-sensitive public key subject)
+    run_and_log_output(
+        ["nsc", "edit", "account", "--name", org.name, "--sk", "generate"]
     )
-    # generate a signing key for account
-    subprocess.run(
-        ["nsc", "edit", "account", "--name", org.name, "--sk", "generate"],
-        check=True,
-        capture_output=True,
-    )
-    # get reference to signing key
-    result = subprocess.run(
-        ["nsc", "describe", "account", org.name, "--json"],
-        check=True,
-        encoding="utf8",
-        capture_output=True,
-    )
+
+    result = run_and_log_output(["nsc", "describe", "account", org.name, "--json"])
     describe_account = json.loads(result.stdout)
-    # add service for account
-    subprocess.run(
+
+    # add service for account (log non-sensitive public key subject)
+    run_and_log_output(
         [
             "nsc",
             "edit",
@@ -126,13 +107,9 @@ def create_nats_account_org(user: User) -> NatsOrganization:
             describe_account["nats"]["signing_keys"][0],
         ]
     )
-    # signing key fingerprint, pubkey, claims payload
-    result = subprocess.run(
-        ["nsc", "describe", "account", org.name, "--json"],
-        check=True,
-        encoding="utf8",
-        capture_output=True,
-    )
+
+    # re-run describe to output public signing key fingerprint, public key, claims
+    result = run_and_log_output(["nsc", "describe", "account", org.name, "--json"])
     describe_account = json.loads(result.stdout)
     # push to remote
     nsc_push_org(org)
@@ -141,12 +118,17 @@ def create_nats_account_org(user: User) -> NatsOrganization:
     return org
 
 
-def create_nats_app(user: User, org: NatsOrganization) -> NatsApp:
+def create_nats_app(user: User, org: NatsOrganization, **kwargs) -> NatsApp:
+    """
+    user - an instance of django.contrib.auth.get_user_model()
+    org - an instance of django_nats_nkeys.settings.django_nats_nkeys_settings.get_nats_account_model()
+    ***kwargs - extra kwargs to pass to NatsApp.objects.create
+    """
     # create nats app associated with org user
     user_name = generate_slug(3)
     org_user, created = org.get_or_add_user(user)
     # create user for account
-    subprocess.run(
+    run_and_log_output(
         [
             "nsc",
             "add",
@@ -157,33 +139,26 @@ def create_nats_app(user: User, org: NatsOrganization) -> NatsApp:
             user_name,
             "-K",
             "service",
-        ],
-        check=True,
-        capture_output=True,
+        ]
     )
 
-    # signing key fingerprint, pubkey, claims payload
-    result = subprocess.run(
+    # describe app chain of trust, public signing key fingerprint, public key, claims
+    result = run_and_log_output(
         ["nsc", "describe", "user", user_name, "--json"],
-        check=True,
-        encoding="utf8",
-        capture_output=True,
     )
+
     describe_user = json.loads(result.stdout)
     # push to remote
     nsc_push_org(org)
     nats_app = NatsApp.objects.create(
-        name=user_name, json=describe_user, org_user=org_user, org=org
+        name=user_name, json=describe_user, org_user=org_user, org=org, **kwargs
     )
     return nats_app
 
 
 def nsc_generate_creds(org: NatsOrganization, app: NatsApp) -> str:
-
-    result = subprocess.run(
+    result = run_and_log_output(
         ["nsc", "generate", "creds", "--account", org.name, "--name", app.name],
-        check=True,
-        capture_output=True,
-        encoding="utf8",
+        stdout=False,  # do not log sensitive credentials to stdout
     )
     return result.stdout
