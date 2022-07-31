@@ -16,10 +16,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # install nsc command-line tool
-RUN wget https://raw.githubusercontent.com/nats-io/nsc/master/install.py -O install-nsc.py
-RUN python3 install-nsc.py
-RUN rm install-nsc.py
-RUN cp $HOME/.nsccli/bin/nsc /usr/local/bin/nsc
+RUN wget https://github.com/nats-io/nsc/releases/download/2.7.1/nsc-linux-amd64.zip -O nsc-linux-amd64.zip
+RUN unzip nsc-linux-amd64.zip -d /usr/local/bin
 
 RUN mkdir /workspace
 WORKDIR /workspace
