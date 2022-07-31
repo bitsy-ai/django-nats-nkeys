@@ -29,7 +29,8 @@ class AbstractNatsApp(models.Model):
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "org_user"], name="unique_app_name_per_org_user"
+                fields=["name", "organization_user"],
+                name="unique_app_name_per_org_user",
             )
         ]
 
