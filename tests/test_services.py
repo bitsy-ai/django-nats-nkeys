@@ -22,7 +22,7 @@ class TestServices(TestCase):
     def test_create_nats_app(self):
         assert self.org.name == self.org.json.get("name")
         app = create_nats_app(self.user, self.org)
-        assert app.org == self.org
+        assert app.organization == self.org
 
     def test_nsc_generate_creds(self):
         creds = nsc_generate_creds(self.org, self.app)
