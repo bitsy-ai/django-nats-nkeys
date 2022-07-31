@@ -178,7 +178,11 @@ def create_nats_app(user: User, org: NatsOrganization, **kwargs) -> NatsApp:
     # push to remote
     nsc_push_org(org)
     nats_app = NatsApp.objects.create(
-        name=user_name, json=describe_user, org_user=org_user, org=org, **kwargs
+        name=user_name,
+        json=describe_user,
+        organization_user=org_user,
+        organization=org,
+        **kwargs,
     )
     return nats_app
 

@@ -29,15 +29,23 @@ class AbstractNatsApp(models.Model):
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "org_user"], name="unique_app_name_per_org_user"
+                fields=["name", "organization_user"],
+                name="unique_app_name_per_org_user",
             )
         ]
 
     name = models.CharField(max_length=255)
-    org_user = models.ForeignKey(NatsOrganizationUser, on_delete=models.CASCADE)
-    org = models.ForeignKey(NatsOrganization, on_delete=models.CASCADE)
+    organization_user = models.ForeignKey(
+        NatsOrganizationUser, on_delete=models.CASCADE, related_name="nats_apps"
+    )
+    organization = models.ForeignKey(
+        NatsOrganization,
+        on_delete=models.CASCADE,
+        related_name="nats_apps",
+    )
     json = models.JSONField(
-        max_length=255, help_text="Output of `nsc describe account`"
+        max_length=255,
+        help_text="Output of `nsc describe account`",
     )
 
 
