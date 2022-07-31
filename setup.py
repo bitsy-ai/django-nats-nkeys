@@ -6,7 +6,7 @@ from setuptools import setup, find_namespace_packages
 from django_nats_nkeys import __version__
 
 long_description: str = open(
-    os.path.join(os.path.dirname(__file__), "README.rst")
+    os.path.join(os.path.dirname(__file__), "README.md")
 ).read()
 install_requires = [
     "coolname>=1.1.0",
