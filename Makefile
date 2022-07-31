@@ -88,7 +88,7 @@ superuser:
 	docker-compose -f docker/local.yml exec django python manage.py createsuperuser
 
 migrations:
-	docker-compose -f docker/local.yml exec django python manage.py makemigrations
+	docker-compose -f docker/local.yml run --rm django python manage.py makemigrations
 
 migrate:
 	docker-compose -f docker/local.yml exec django python manage.py migrate

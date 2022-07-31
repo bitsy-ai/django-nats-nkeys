@@ -1,6 +1,6 @@
 
 ==============
-Django Coturn
+Django Nats NKEYS
 ==============
 
 .. image:: https://img.shields.io/pypi/v/django-nats-nkeys
