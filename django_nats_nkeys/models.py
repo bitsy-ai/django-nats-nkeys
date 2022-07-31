@@ -19,13 +19,14 @@ class NatsOrganizationUser(AbstractOrganizationUser):
     pass
 
 
-class NatsApp(models.Model):
+class AbstractNatsApp(models.Model):
     """
     Corresponds to a NATS user/client within an Account group
     https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
     """
 
     class Meta:
+        abstract = True
         constraints = [
             models.UniqueConstraint(
                 fields=["name", "org_user"], name="unique_app_name_per_org_user"
@@ -38,6 +39,15 @@ class NatsApp(models.Model):
     json = models.JSONField(
         max_length=255, help_text="Output of `nsc describe account`", default=dict
     )
+
+
+class NatsApp(AbstractNatsApp):
+    """
+    Corresponds to a NATS user/client within an Account group
+    https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
+    """
+
+    pass
 
 
 class NatsOrganizationOwner(AbstractOrganizationOwner):
