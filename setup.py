@@ -24,6 +24,7 @@ setup(
     author_email="leigh@bitsy.ai",
     description="Django NATS Nkey is a Django app to synchronize Django superusers, accounts, and users with NATS nkey-based authentization/authorization scheme",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     license="GNU AGPLv3",
     keywords="django NATS",
     url="http://github.com/bitsy-ai/django-nats-nkey",
