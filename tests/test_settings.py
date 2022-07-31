@@ -9,7 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django_nats_nkeys.settings import nats_nkeys_settings
 
 
-class TestCoturnSettings(TestCase):
+class TestSettings(TestCase):
     def setUp(self):
         return super().setUp()
 

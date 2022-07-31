@@ -1,5 +1,3 @@
-# References: https://github.com/coturn/coturn/blob/master/turndb/schema.sql
-
 from django.db import models
 from organizations.abstract import (
     AbstractOrganization,
