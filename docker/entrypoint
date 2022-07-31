@@ -4,7 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ -z "${NSC_STORE}"]; then
+if [ !-z "${NSC_STORE}"]; then
     nsc env --store $NSC_STORE 
 fi
 
