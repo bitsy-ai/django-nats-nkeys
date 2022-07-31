@@ -5,7 +5,7 @@ from click import BaseCommand
 from django.core.management.base import BaseCommand, CommandParser
 
 from django_nats_nkeys.settings import nats_nkeys_settings
-from django_nats_nkeys.services import init_nsc_operator
+from django_nats_nkeys.services import nsc_init_operator
 
 
 class Command(BaseCommand):
@@ -34,4 +34,4 @@ class Command(BaseCommand):
         name = kwargs.get("name")
         outdir = kwargs.get("outdir")
         server = kwargs.get("server")
-        init_nsc_operator(name, outdir, server, stdout=self.stdout, stderr=self.stderr)
+        nsc_init_operator(name, outdir, server, stdout=self.stdout, stderr=self.stderr)

@@ -1,6 +1,10 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from django_nats_nkeys.services import create_nats_account_org, create_nats_app
+from django_nats_nkeys.services import (
+    create_nats_account_org,
+    create_nats_app,
+    nsc_generate_creds,
+)
 from coolname import generate_slug
 
 User = get_user_model()
@@ -12,11 +16,18 @@ class TestServices(TestCase):
         self.user = User.objects.create(
             email="admin@test.com", password="testing1234", is_superuser=False
         )
+        self.org = create_nats_account_org(self.user)
+        self.app = create_nats_app(self.user, self.org)
 
     def test_create_nats_app(self):
-        org = create_nats_account_org(self.user)
-        assert org.name == org.json.get("name")
+        assert self.org.name == self.org.json.get("name")
+        app = create_nats_app(self.user, self.org)
+        assert app.org == self.org
 
-        app = create_nats_app(self.user, org)
+    def test_nsc_generate_creds(self):
+        creds = nsc_generate_creds(self.org, self.app)
 
-        assert app.org == org
+        assert ("-----BEGIN NATS USER JWT-----") in creds
+        assert ("------END NATS USER JWT------") in creds
+        assert ("-----BEGIN USER NKEY SEED-----") in creds
+        assert ("------END USER NKEY SEED------") in creds

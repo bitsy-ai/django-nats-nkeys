@@ -12,7 +12,7 @@ NatsOrganization = nats_nkeys_settings.get_nats_account_model()
 NatsApp = nats_nkeys_settings.get_nats_app_model()
 
 
-def init_nsc_operator(name, outdir, server, stdout=None, stderr=None):
+def nsc_init_operator(name, outdir, server, stdout=None, stderr=None):
     # create operator with system account
     # https://docs.nats.io/running-a-nats-service/nats_admin/security/jwt#system-account
     result = subprocess.run(
@@ -69,7 +69,7 @@ def init_nsc_operator(name, outdir, server, stdout=None, stderr=None):
         stdout.write(result.stdout)
 
 
-def push_nsc_org(org: NatsOrganization) -> None:
+def nsc_push_org(org: NatsOrganization) -> None:
     # push to remote
     subprocess.run(
         [
@@ -135,7 +135,7 @@ def create_nats_account_org(user: User) -> NatsOrganization:
     )
     describe_account = json.loads(result.stdout)
     # push to remote
-    push_nsc_org(org)
+    nsc_push_org(org)
     org.json = describe_account
     org.save()
     return org
@@ -171,8 +171,19 @@ def create_nats_app(user: User, org: NatsOrganization) -> NatsApp:
     )
     describe_user = json.loads(result.stdout)
     # push to remote
-    push_nsc_org(org)
+    nsc_push_org(org)
     nats_app = NatsApp.objects.create(
         name=user_name, json=describe_user, org_user=org_user, org=org
     )
     return nats_app
+
+
+def nsc_generate_creds(org: NatsOrganization, app: NatsApp) -> str:
+
+    result = subprocess.run(
+        ["nsc", "generate", "creds", "--account", org.name, "--name", app.name],
+        check=True,
+        capture_output=True,
+        encoding="utf8",
+    )
+    return result.stdout
