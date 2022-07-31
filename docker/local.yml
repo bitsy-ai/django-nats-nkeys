@@ -2,7 +2,7 @@ version: "3"
 
 volumes:
   local_postgres_data: {}
-  local_nats_account_conf: {}
+  local_nsc_data: {}
 services:
   django: &django # enables use of pdb
     hostname: django
@@ -17,10 +17,15 @@ services:
       - postgres
     volumes:
       - ../:/workspace:z
+      - local_nsc_data:/var/lib/nats/nsc:z
     ports:
       - "8000:8000"
     env_file:
       - test.env
+    environment:
+      NKEYS_PATH: /var/lib/nats/nsc/keys
+      NSC_HOME: /var/lib/nats/nsc
+      NSC_STORE: /var/lib/nats/nsc/stores
     command:
       - ./start
   postgres:
@@ -39,8 +44,6 @@ services:
     container_name: django_nats_nkeys_nats
     volumes:
       - ../.nats/:/etc/nats
-    env_file:
-      - test.env
     command:
       - -c
       - /etc/nats/nats-server.conf
