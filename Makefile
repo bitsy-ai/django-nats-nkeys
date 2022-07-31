@@ -73,7 +73,7 @@ images:
 	docker-compose -f docker/local.yml build
 
 pytest:
-	docker-compose -f docker/local.yml exec django pytest
+	docker-compose -f docker/local.yml run --rm django pytest
 
 pytest-ci:
 	docker-compose -f docker/local.yml exec -T django pytest
