@@ -1,10 +1,11 @@
 import subprocess
-from typing import List
+from typing import List, Union
 import logging
 import json
 import os
-from organizations.utils import create_organization
+from organizations.utils import model_field_names, create_organization
 from django.contrib.auth import get_user_model
+from django_nats_nkeys.models import NatsOrganizationUser
 from django_nats_nkeys.settings import nats_nkeys_settings
 from coolname import generate_slug
 
@@ -111,8 +112,7 @@ def create_nats_account_org(user: User) -> NatsOrganization:
         user,
         generate_slug(3),
         org_user_defaults={"is_admin": True},
-        org_model=nats_nkeys_settings.get_nats_account_model(),
-        org_user_model=nats_nkeys_settings.get_nats_user_model(),
+        model=nats_nkeys_settings.get_nats_account_model(),
     )
     # create account via nsc (log non-sensitive public key subject)
     run_and_log_output(["nsc", "add", "account", "--name", org.name])
@@ -142,17 +142,45 @@ def create_nats_account_org(user: User) -> NatsOrganization:
             describe_account["nats"]["signing_keys"][0],
         ]
     )
+
+    org_user, created = org.get_or_add_user(user)
+    # add organization user for account
+    run_and_log_output(
+        [
+            "nsc",
+            "add",
+            "user",
+            "--account",
+            org.name,
+            "--name",
+            org_user.app_name,
+            "-K",
+            "service",
+        ]
+    )
+    # describe app chain of trust, public signing key fingerprint, public key, claims
+    result = run_and_log_output(
+        ["nsc", "describe", "user", org_user.app_name, "--json"],
+    )
+    describe_user = json.loads(result.stdout)
+    org_user.json = describe_user
+    nsc_push_org(org)
+    org_user.save()
+
     return org
 
 
-def create_nats_app(user: User, org: NatsOrganization, **kwargs) -> NatsApp:
+def create_nats_app(
+    user: User, org: NatsOrganization, nats_app_class=NatsApp, **kwargs
+) -> NatsApp:
     """
     user - an instance of django.contrib.auth.get_user_model()
     org - an instance of django_nats_nkeys.settings.django_nats_nkeys_settings.get_nats_account_model()
+    nats_app_class - use a model other than
     ***kwargs - extra kwargs to pass to NatsApp.objects.create
     """
     # create nats app associated with org user
-    user_name = generate_slug(3)
+    app_name = generate_slug(3)
     org_user, created = org.get_or_add_user(user)
     # create user for account
     run_and_log_output(
@@ -163,7 +191,7 @@ def create_nats_app(user: User, org: NatsOrganization, **kwargs) -> NatsApp:
             "--account",
             org.name,
             "--name",
-            user_name,
+            app_name,
             "-K",
             "service",
         ]
@@ -171,14 +199,14 @@ def create_nats_app(user: User, org: NatsOrganization, **kwargs) -> NatsApp:
 
     # describe app chain of trust, public signing key fingerprint, public key, claims
     result = run_and_log_output(
-        ["nsc", "describe", "user", user_name, "--json"],
+        ["nsc", "describe", "user", app_name, "--json"],
     )
 
     describe_user = json.loads(result.stdout)
     # push to remote
     nsc_push_org(org)
-    nats_app = NatsApp.objects.create(
-        name=user_name,
+    nats_app = nats_app_class.objects.create(
+        app_name=app_name,
         json=describe_user,
         organization_user=org_user,
         organization=org,
@@ -187,9 +215,11 @@ def create_nats_app(user: User, org: NatsOrganization, **kwargs) -> NatsApp:
     return nats_app
 
 
-def nsc_generate_creds(org: NatsOrganization, app: NatsApp) -> str:
+def nsc_generate_creds(
+    org: NatsOrganization, app: Union[NatsApp, NatsOrganizationUser]
+) -> str:
     result = run_and_log_output(
-        ["nsc", "generate", "creds", "--account", org.name, "--name", app.name],
+        ["nsc", "generate", "creds", "--account", org.name, "--name", app.app_name],
         stdout=False,  # do not log sensitive credentials to stdout
     )
     return result.stdout

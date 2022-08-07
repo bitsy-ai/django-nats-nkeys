@@ -5,8 +5,14 @@ from organizations.abstract import (
     AbstractOrganizationOwner,
     AbstractOrganizationInvitation,
 )
+from coolname import generate_slug
+
 
 # ref: https://django-organizations.readthedocs.io/en/latest/cookbook.html#multiple-organizations-with-simple-inheritance
+
+
+def _default_name():
+    return generate_slug(3)
 
 
 class NatsOrganization(AbstractOrganization):
@@ -16,12 +22,19 @@ class NatsOrganization(AbstractOrganization):
 
 
 class NatsOrganizationUser(AbstractOrganizationUser):
-    pass
+    """
+    Corresponds to a NATS user/client, intended for use for a human who owns one or more NatsApp instances and wants to publish/subscribe to all apps via signed credential.
+    """
+
+    app_name = models.CharField(max_length=255, default=_default_name)
+    json = models.JSONField(
+        max_length=255, help_text="Output of `nsc describe account`", default=dict
+    )
 
 
 class AbstractNatsApp(models.Model):
     """
-    Corresponds to a NATS user/client within an Account group
+    Corresponds to a NATS user/client within an Account group, intended for use by application
     https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
     """
 
@@ -29,12 +42,12 @@ class AbstractNatsApp(models.Model):
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "organization_user"],
+                fields=["app_name", "organization_user"],
                 name="unique_app_name_per_org_user",
             )
         ]
 
-    name = models.CharField(max_length=255)
+    app_name = models.CharField(max_length=255, default=_default_name)
     organization_user = models.ForeignKey(
         NatsOrganizationUser, on_delete=models.CASCADE, related_name="nats_apps"
     )
