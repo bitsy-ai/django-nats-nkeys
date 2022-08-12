@@ -31,12 +31,16 @@ def run_and_log_output(
     return result
 
 
-def nsc_import(dirname: str) -> subprocess.CompletedProcess:
-    return run_and_log_output(["nsc", "export", "--dir", dirname])
+def nsc_pull() -> subprocess.CompletedProcess:
+    return run_and_log_output(["nsc", "pull" "--all"])
+
+
+def nsc_export(dirname: str) -> subprocess.CompletedProcess:
+    return run_and_log_output(["nsc", "export", "keys", "--dir", dirname])
 
 
 def nsc_import(dirname: str) -> subprocess.CompletedProcess:
-    return run_and_log_output(["nsc", "import", "--dir", dirname])
+    return run_and_log_output(["nsc", "import", "keys", "--dir", dirname])
 
 
 def nsc_init_operator(name, outdir, server) -> str:

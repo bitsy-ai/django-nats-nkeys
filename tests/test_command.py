@@ -16,5 +16,9 @@ class TestCommand(TestCase):
         )
 
     def test_nsc_import_export(self):
+        # test non-zero exits
         call_command("nsc_export")
         call_command("nsc_import")
+
+    def test_nsc_pull(self):
+        call_command("nsc_pull")
