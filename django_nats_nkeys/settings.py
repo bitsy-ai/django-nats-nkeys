@@ -6,8 +6,12 @@ from django.db.models import Model
 
 class DjangoNatsNkeySettings:
     @property
+    def NATS_NKEYS_IMPORT_DIR(self) -> str:
+        return getattr(settings, "NATS_NKEYS_IMPORT_DIR", ".nats/")
+
+    @property
     def NATS_NKEYS_EXPORT_DIR(self) -> str:
-        return getattr(settings, "NATS_NKEYS_CONFIG_DIR", ".nats/")
+        return getattr(settings, "NATS_NKEYS_EXPORT_DIR", ".nats/")
 
     @property
     def NATS_SERVER_URI(self) -> str:

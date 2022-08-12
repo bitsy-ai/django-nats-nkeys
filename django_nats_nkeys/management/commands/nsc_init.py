@@ -1,6 +1,3 @@
-import subprocess
-import os
-
 from click import BaseCommand
 from django.core.management.base import BaseCommand, CommandParser
 
@@ -34,4 +31,4 @@ class Command(BaseCommand):
         name = kwargs.get("name")
         outdir = kwargs.get("outdir")
         server = kwargs.get("server")
-        nsc_init_operator(name, outdir, server, stdout=self.stdout, stderr=self.stderr)
+        nsc_init_operator(name, outdir, server)

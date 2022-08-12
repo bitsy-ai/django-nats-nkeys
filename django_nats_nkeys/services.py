@@ -31,7 +31,22 @@ def run_and_log_output(
     return result
 
 
-def nsc_init_operator(name, outdir, server, stdout=None, stderr=None) -> str:
+def nsc_pull() -> subprocess.CompletedProcess:
+    return run_and_log_output(["nsc", "pull", "--all"])
+
+
+def nsc_export(dirname: str, force=False) -> subprocess.CompletedProcess:
+    cmd = ["nsc", "export", "keys", "--dir", dirname]
+    if force is True:
+        cmd.append("--force")
+    return run_and_log_output(cmd)
+
+
+def nsc_import(dirname: str) -> subprocess.CompletedProcess:
+    return run_and_log_output(["nsc", "import", "keys", "--dir", dirname])
+
+
+def nsc_init_operator(name, outdir, server) -> str:
     """
     One-time setup of settings.NATS_NKEYS_OPERATOR_NAME
     """

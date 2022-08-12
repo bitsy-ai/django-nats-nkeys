@@ -59,3 +59,24 @@ Contributor's Guide
 3.  Run `black` linter:
 
         make lint
+
+
+Settings
+===========
+
+`NATS_SERVER_URI` (default: `"nats://nats:4222"`)
+`NATS_NKEYS_IMPORT_DIR` (default: `".nats/"`)
+`NATS_NKEYS_EXPORT_DIR` (default: `".nats/"`)
+`NATS_NKEYS_OPERATOR_NAME` (default: `"DjangoOperator"`)
+
+`NATS_ACCOUNT_OWNER_MODEL` (default: `"django_nats_nkeys.NatsOrganizationOwner"`)
+* Must subclass `django_nats_nkey.models.NatsOrganizationOwner`
+
+`NATS_APP_MODEL` (default: `"django_nats_nkey.models.NatsApp"`)
+* Must subclass `django_nats_nkey.models.AbstractNatsApp`
+
+`NATS_ACCOUNT_MODEL` (default: `"django_nats_nkeys.NatsOrganization"`)
+* Must subclass `django_nats_nkeys.NatsOrganization`
+
+`NATS_USER_MODEL` (default: `"django_nats_nkeys.models.NatsOrganizationUser"`)
+* Must subclass `django_nats_nkeys.models.NatsOrganizationUser`
