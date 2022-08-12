@@ -32,11 +32,14 @@ def run_and_log_output(
 
 
 def nsc_pull() -> subprocess.CompletedProcess:
-    return run_and_log_output(["nsc", "pull" "--all"])
+    return run_and_log_output(["nsc", "pull", "--all"])
 
 
-def nsc_export(dirname: str) -> subprocess.CompletedProcess:
-    return run_and_log_output(["nsc", "export", "keys", "--dir", dirname])
+def nsc_export(dirname: str, force=False) -> subprocess.CompletedProcess:
+    cmd = ["nsc", "export", "keys", "--dir", dirname]
+    if force is True:
+        cmd.append("--force")
+    return run_and_log_output(cmd)
 
 
 def nsc_import(dirname: str) -> subprocess.CompletedProcess:

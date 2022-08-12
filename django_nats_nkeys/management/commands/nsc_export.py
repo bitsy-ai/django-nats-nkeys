@@ -13,7 +13,14 @@ class Command(BaseCommand):
             help="Export nkeys to path",
             default=nats_nkeys_settings.NATS_NKEYS_EXPORT_DIR,
         )
+        parser.add_argument(
+            "--force",
+            help="Overwrite existing keys in --dir",
+            default=False,
+            action="store_true",
+        )
 
     def handle(self, *args, **kwargs):
-        indir = kwargs.get("dir")
-        nsc_export(indir)
+        path = kwargs.get("dir")
+        force = kwargs.get("force")
+        nsc_export(path, force=force)
