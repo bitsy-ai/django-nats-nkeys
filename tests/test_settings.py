@@ -1,7 +1,7 @@
 """
 dj-stripe Migrations Tests
 """
-from django_nats_nkeys.models import NatsApp, NatsOrganizationOwner
+from django_nats_nkeys.models import NatsApp
 import pytest
 from django.test import TestCase, override_settings
 from django.core.exceptions import ImproperlyConfigured
@@ -12,6 +12,14 @@ from django_nats_nkeys.settings import nats_nkeys_settings
 class TestSettings(TestCase):
     def setUp(self):
         return super().setUp()
+
+    @override_settings(NATS_NKEYS_IMPORT_DIR="/etc/django-nats-operator")
+    def test_custom_export_dir(self):
+        assert nats_nkeys_settings.NATS_NKEYS_IMPORT_DIR == "django-nats-operator"
+
+    @override_settings(NATS_NKEYS_EXPORT_DIR="/etc/django-nats-operator")
+    def test_custom_export_dir(self):
+        assert nats_nkeys_settings.NATS_NKEYS_EXPORT_DIR == "django-nats-operator"
 
     @override_settings(NATS_NKEYS_OPERATOR_NAME="MyCustomOperator")
     def test_custom_operator_name(self):
