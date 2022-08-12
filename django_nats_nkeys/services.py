@@ -31,7 +31,15 @@ def run_and_log_output(
     return result
 
 
-def nsc_init_operator(name, outdir, server, stdout=None, stderr=None) -> str:
+def nsc_import(dirname: str) -> subprocess.CompletedProcess:
+    return run_and_log_output(["nsc", "export", "--dir", dirname])
+
+
+def nsc_import(dirname: str) -> subprocess.CompletedProcess:
+    return run_and_log_output(["nsc", "import", "--dir", dirname])
+
+
+def nsc_init_operator(name, outdir, server) -> str:
     """
     One-time setup of settings.NATS_NKEYS_OPERATOR_NAME
     """

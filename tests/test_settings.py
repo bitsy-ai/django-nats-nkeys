@@ -15,11 +15,11 @@ class TestSettings(TestCase):
 
     @override_settings(NATS_NKEYS_IMPORT_DIR="/etc/django-nats-operator")
     def test_custom_export_dir(self):
-        assert nats_nkeys_settings.NATS_NKEYS_IMPORT_DIR == "django-nats-operator"
+        assert nats_nkeys_settings.NATS_NKEYS_IMPORT_DIR == "/etc/django-nats-operator"
 
     @override_settings(NATS_NKEYS_EXPORT_DIR="/etc/django-nats-operator")
     def test_custom_export_dir(self):
-        assert nats_nkeys_settings.NATS_NKEYS_EXPORT_DIR == "django-nats-operator"
+        assert nats_nkeys_settings.NATS_NKEYS_EXPORT_DIR == "/etc/django-nats-operator"
 
     @override_settings(NATS_NKEYS_OPERATOR_NAME="MyCustomOperator")
     def test_custom_operator_name(self):
