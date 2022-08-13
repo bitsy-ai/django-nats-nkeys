@@ -71,7 +71,7 @@ def nsc_add_account(
             ["nsc", "edit", "account", "--name", obj.name, "--sk", "generate"]
         )
         # push local changes to remote NATs resolver
-        nsc_push(account_name=obj.name)
+        nsc_push(account=obj.name)
 
     except subprocess.CalledProcessError as e:
         # nsc add account command returned "Error: the account "<name>" already exists"
@@ -85,13 +85,13 @@ def nsc_add_account(
     return obj
 
 
-def nsc_pull(account_name=None, force=False) -> subprocess.CompletedProcess:
+def nsc_pull(account=None, force=False) -> subprocess.CompletedProcess:
     cmd = ["nsc", "pull"]
-    if account_name is None:
+    if account is None:
         cmd.append("--all")
     else:
         cmd.append("--account")
-        cmd.append(account_name)
+        cmd.append(account)
 
     if force is True:
         cmd.append("--overwrite-newer")
@@ -114,13 +114,13 @@ def nsc_pull(account_name=None, force=False) -> subprocess.CompletedProcess:
     return result
 
 
-def nsc_push(account_name=None, force=False) -> subprocess.CompletedProcess:
+def nsc_push(account=None, force=False) -> subprocess.CompletedProcess:
     cmd = ["nsc", "push"]
-    if account_name is None:
+    if account is None:
         cmd.append("--all")
     else:
         cmd.append("--account")
-        cmd.append(account_name)
+        cmd.append(account)
     extra_args = [
         "--keystore-dir",
         nats_nkeys_settings.NATS_NSC_KEYSTORE_DIR,
@@ -550,134 +550,3 @@ def nsc_add_import(
             activation_token,
         ]
         run_nsc_and_log_output(cmd, stdout=False, stderr=False)
-
-
-def nsc_robots_exports_init():
-    # configure exports for org user accounts
-    for nats_org in NatsOrganization.objects.all():
-        # add stream export
-        for stream_name, stream in nats_nkeys_settings.NATS_EXPORT_STREAMS.items():
-            stream_cmd = [
-                "nsc",
-                "add",
-                "export",
-                "--account",
-                nats_org.name,
-                "--subject",
-                stream["subject_pattern"],
-                "--name",
-                stream_name,
-            ]
-            # indicates stream is private
-            if stream.get("public", False) is not True:
-                stream_cmd += ["--private"]
-            run_nsc_and_log_output(stream_cmd)
-
-            # get robots that import this stream
-            robots = {
-                k: v
-                for k, v in nats_nkeys_settings.NATS_ROBOT_ACCOUNTS.items()
-                if stream_name in v["import_streams"].keys()
-            }
-
-            for robot_name in robots.keys():
-                import_cmd = [
-                    "nsc",
-                    "add",
-                    "import",
-                    "--src-account",
-                    nats_org.name,
-                    "--account",
-                    robot_name,
-                ]
-                # add --remote-subject for public imports
-                if stream.get("public", False) is True:
-                    import_cmd += ["--remote-subject", stream["subject_pattern"]]
-                run_nsc_and_log_output(import_cmd)
-        # TODO add services
-
-
-def nsc_robots_init_all_accounts():
-    for account_name, robot in nats_nkeys_settings.NATS_ROBOT_ACCOUNTS.items():
-        nsc_robots_accoount_init(account_name, robot)
-
-
-def nsc_robots_accoount_init(
-    account_name: str, robot: NatsRobotAccountModel
-) -> Tuple[NatsRobotAccountModel, bool]:
-    created = False
-    # does robot account model already exist?
-    try:
-        robot_account = NatsRobotAccountModel.objects.get(name=account_name)
-    except NatsRobotAccountModel.DoesNotExist:
-        logger.info("Initializing NatsRobotAccountModel: %s", account_name)
-        # does account already exist in nsc?
-        try:
-            result = run_nsc_and_log_output(
-                ["nsc", "describe", "account", account_name, "--json"]
-            )
-            describe_account = json.loads(result.stdout)
-        except subprocess.CalledProcessError:
-            logger.info("Initializing nsc account")
-            run_nsc_and_log_output(["nsc", "add", "account", "--name", account_name])
-
-            # generate a signing key for account (log non-sensitive public key subject)
-            run_nsc_and_log_output(
-                [
-                    "nsc",
-                    "edit",
-                    "account",
-                    "--name",
-                    account_name,
-                    "--sk",
-                    "generate",
-                ]
-            )
-            # push to remote
-            nsc_push(account_name=account_name)
-            result = run_nsc_and_log_output(
-                ["nsc", "describe", "account", account_name, "--json"]
-            )
-            describe_account = json.loads(result.stdout)
-            created = True
-        robot_account = NatsRobotAccountModel.objects.create(
-            name=account_name, json=describe_account
-        )
-
-        signing_key = describe_account["nats"]["signing_keys"][0]
-        if type(signing_key) == dict:
-            signing_key = signing_key["key"]
-        robot_account = create_nats_sk_service(
-            account_name=robot_account.name,
-            signing_key=signing_key,
-            obj=robot_account,
-        )
-    return robot_account, created
-    # logger.info("Configuring apps for NatsRobotAccountModel: %s", robot_account)
-    # for app_name, app in robot["apps"].items():
-    #     try:
-    #         robot_app = NatsRobotAppModel.objects.get(name=app_name)
-    #     except NatsRobotAppModel.DoesNotExist:
-    #         # create robot app user
-    #         run_nsc_and_log_output(
-    #             [
-    #                 "nsc",
-    #                 "add",
-    #                 "user",
-    #                 "--account",
-    #                 account_name,
-    #                 "--name",
-    #                 app_name,
-    #                 "-K",
-    #                 "service",
-    #             ]
-    #         )
-    #         # describe app chain of trust, public signing key fingerprint, public key, claims
-    #         result = run_nsc_and_log_output(
-    #             ["nsc", "describe", "user", app_name, "--json"],
-    #         )
-    #         describe_app = json.loads(result.stdout)
-    #         nsc_push(account_name=account_name)
-    #         robot_app = NatsRobotAppModel.objects.create(
-    #             account=robot_account, name=app_name, json=describe_app
-    #         )
