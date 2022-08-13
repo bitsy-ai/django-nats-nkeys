@@ -50,14 +50,14 @@ def add_nats_organization_export(sender, instance, model, action, pk_set, **kwar
         for org_account in msg_export.nats_organization_imports.all():
             nsc_add_import(
                 instance.name,
-                robot_account.name,
+                org_account.name,
                 msg_export.subject_pattern,
                 public=msg_export.public,
             )
-            save_describe_json(robot_account.name, robot_account)
+            save_describe_json(org_account.name, org_account)
 
         # handle import for robot account
-        for robot_account in msg_export.nats_robot_exports.all():
+        for robot_account in msg_export.nats_robot_imports.all():
             nsc_add_import(
                 instance.name,
                 robot_account.name,

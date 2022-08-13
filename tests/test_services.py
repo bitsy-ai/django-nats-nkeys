@@ -104,7 +104,7 @@ class TestServices(TestCase):
         assert self.robot_app.app_name == self.robot_app_name
         assert self.robot_app.json == nsc_describe_json(self.robot_app)
 
-    def test_org_exports_public_stream(self):
+    def test_imports_and_exports_stream(self):
         export_name = "all-public"
         subject_pattern = "public.>"
         public_msg_stream = NatsMessageExport.objects.create(
@@ -113,6 +113,25 @@ class TestServices(TestCase):
             public=True,
             export_type=NatsMessageExportType.STREAM,
         )
+
+        # pre-configure importers for stream
+
+        # add a robot importer
+        self.robot_account.imports.add(public_msg_stream)
+        # add another org account importer
+        partner_user = User.objects.create(
+            email="partner@test.com",
+            password="testing1234",
+            is_superuser=False,
+            username="partner",
+        )
+        partner_org_name = generate_slug(3)
+        partner_org = create_organization(
+            partner_user,
+            partner_org_name,
+            org_user_defaults={"is_admin": True},
+        )
+        partner_org.imports.add(public_msg_stream)
 
         # add export to NatsOrganization
         self.org.exports.add(public_msg_stream)
@@ -123,3 +142,28 @@ class TestServices(TestCase):
             "subject": subject_pattern,
             "type": "stream",
         }
+
+        # imports account id matches
+        partner_org.refresh_from_db()
+        self.robot_account.refresh_from_db()
+        self.org.refresh_from_db()
+
+        assert partner_org.json["nats"]["imports"][0]["account"] == self.org.json["sub"]
+        assert (
+            self.robot_account.json["nats"]["imports"][0]["account"]
+            == self.org.json["sub"]
+        )
+
+        # subjects match
+        # TODO: this will break for remote subject remapping
+        assert (
+            partner_org.json["nats"]["imports"][0]["subject"]
+            == subject_pattern
+            == self.org.json["nats"]["exports"][0]["subject"]
+        )
+
+        assert (
+            self.robot_account.json["nats"]["imports"][0]["subject"]
+            == subject_pattern
+            == self.org.json["nats"]["exports"][0]["subject"]
+        )

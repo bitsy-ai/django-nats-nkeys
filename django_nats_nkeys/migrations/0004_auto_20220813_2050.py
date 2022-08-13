@@ -6,23 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_nats_nkeys', '0003_auto_20220813_2005'),
+        ("django_nats_nkeys", "0003_auto_20220813_2005"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='natsorganizationapp',
-            name='json',
-            field=models.JSONField(default=dict, help_text='Output of `nsc describe account`', max_length=255),
+            model_name="natsorganizationapp",
+            name="json",
+            field=models.JSONField(
+                default=dict,
+                help_text="Output of `nsc describe account`",
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='natsrobotaccount',
-            name='json',
-            field=models.JSONField(default=dict, help_text='Output of `nsc describe account`', max_length=255),
+            model_name="natsrobotaccount",
+            name="json",
+            field=models.JSONField(
+                default=dict,
+                help_text="Output of `nsc describe account`",
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='natsrobotapp',
-            name='json',
-            field=models.JSONField(default=dict, help_text='Output of `nsc describe account`', max_length=255),
+            model_name="natsrobotapp",
+            name="json",
+            field=models.JSONField(
+                default=dict,
+                help_text="Output of `nsc describe account`",
+                max_length=255,
+            ),
         ),
     ]
