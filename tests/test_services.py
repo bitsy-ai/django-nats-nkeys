@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 
 from django_nats_nkeys.services import NatsOrganizationUser, nsc_describe_json
 from django_nats_nkeys.models import (
+    NatsMessageExport,
+    NatsMessageExportType,
     NatsOrganizationApp,
     NatsOrganizationOwner,
     NatsRobotAccount,
@@ -101,3 +103,23 @@ class TestServices(TestCase):
     def test_create_robot_app(self):
         assert self.robot_app.app_name == self.robot_app_name
         assert self.robot_app.json == nsc_describe_json(self.robot_app)
+
+    def test_org_exports_public_stream(self):
+        export_name = "all-public"
+        subject_pattern = "public.>"
+        public_msg_stream = NatsMessageExport.objects.create(
+            name=export_name,
+            subject_pattern=subject_pattern,
+            public=True,
+            export_type=NatsMessageExportType.STREAM,
+        )
+
+        # add export to NatsOrganization
+        self.org.exports.add(public_msg_stream)
+        assert self.org.exports.count() == 1
+        # nsc describe output should contain stream
+        assert self.org.json["nats"]["exports"][0] == {
+            "name": export_name,
+            "subject": subject_pattern,
+            "type": "stream",
+        }
