@@ -1,3 +1,4 @@
+import os
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -5,6 +6,33 @@ from django.db.models import Model
 
 
 class DjangoNatsNkeySettings:
+    @property
+    def NATS_NSC_DATA_DIR(self) -> str:
+        """
+        Defaults to $NSC_STORE
+        Passed via nsc --data-dir
+        """
+        default = os.environ.get("NSC_STORE", "/var/lib/nats/nsc/stores")
+        return getattr(settings, "NATS_NSC_DATA_DIR", default)
+
+    @property
+    def NATS_NSC_CONFIG_DIR(self) -> str:
+        """
+        Defaults to $NSC_HOME
+        Passed via nsc --config-dir
+        """
+        default = os.environ.get("NSC_HOME", "/var/lib/nats/nsc/config")
+        return getattr(settings, "NATS_NSC_CONFIG_DIR", default)
+
+    @property
+    def NATS_NSC_KEYSTORE_DIR(self) -> str:
+        """
+        Defaults to $NKEYS_PATH
+        Passed via nsc --keystore-dir
+        """
+        default = os.environ.get("NKEYS_PATH", "/var/lib/nats/nsc/keys")
+        return getattr(settings, "NATS_NSC_KEYSTORE_DIR", default)
+
     @property
     def NATS_NKEYS_IMPORT_DIR(self) -> str:
         return getattr(settings, "NATS_NKEYS_IMPORT_DIR", ".nats/")
@@ -20,6 +48,62 @@ class DjangoNatsNkeySettings:
     @property
     def NATS_NKEYS_OPERATOR_NAME(self) -> str:
         return getattr(settings, "NATS_NKEYS_OPERATOR_NAME", "DjangoOperator")
+
+    def get_nats_robot_account_model_string(self) -> str:
+        return getattr(
+            settings,
+            "NATS_ROBOT_ACCOUNT_MODEL",
+            "django_nats_nkeys.NatsRobotAccount",
+        )
+
+    def get_nats_robot_account_model(self) -> Model:
+        model_name = self.get_nats_robot_account_model_string()
+        try:
+            model = django_apps.get_model(model_name)
+        except ValueError:
+            raise ImproperlyConfigured(
+                "NATS_ROBOT_ACCOUNT_MODEL must be of the form 'app_label.model_name'."
+            )
+        except LookupError:
+            raise ImproperlyConfigured(
+                "NATS_ROBOT_ACCOUNT_MODEL refers to model '{model}' "
+                "that has not been installed.".format(model=model_name)
+            )
+        from django_nats_nkeys.models import AbstractNatsRobotAccount
+
+        if not issubclass(model, AbstractNatsRobotAccount):
+            raise ImproperlyConfigured(
+                "NATS_ROBOT_ACCOUNT_MODEL must subclass django_nats_nkey.models.AbstractRobotAccountt"
+            )
+        return model
+
+    def get_nats_robot_app_model_string(self) -> str:
+        return getattr(
+            settings,
+            "NATS_ROBOT_APP_MODEL",
+            "django_nats_nkeys.NatsRobotApp",
+        )
+
+    def get_nats_robot_app_model(self) -> Model:
+        model_name = self.get_nats_robot_app_model_string()
+        try:
+            model = django_apps.get_model(model_name)
+        except ValueError:
+            raise ImproperlyConfigured(
+                "NATS_ROBOT_APP_MODEL must be of the form 'app_label.model_name'."
+            )
+        except LookupError:
+            raise ImproperlyConfigured(
+                "NATS_ROBOT_APP_MODEL refers to model '{model}' "
+                "that has not been installed.".format(model=model_name)
+            )
+        from django_nats_nkeys.models import NatsRobotApp
+
+        if not issubclass(model, NatsRobotApp):
+            raise ImproperlyConfigured(
+                "NATS_ROBOT_ACCOUNT_MODEL must subclass django_nats_nkey.models.NatsRobotApp"
+            )
+        return model
 
     def get_nats_account_owner_model_string(self) -> str:
         return getattr(
@@ -49,15 +133,15 @@ class DjangoNatsNkeySettings:
             )
         return nats_app_model
 
-    def get_nats_app_model_string(self) -> str:
+    def get_nats_organization_app_model_string(self) -> str:
         return getattr(
             settings,
             "NATS_ORGANIZATION_APP_MODEL",
             "django_nats_nkeys.NatsOrganizationApp",
         )
 
-    def get_nats_app_model(self) -> Model:
-        model_name = self.get_nats_app_model_string()
+    def get_nats_organization_app_model(self) -> Model:
+        model_name = self.get_nats_organization_app_model_string()
         try:
             nats_app_model = django_apps.get_model(model_name)
         except ValueError:

@@ -1,35 +1,85 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+
+from django_nats_nkeys.services import NatsOrganizationUser, nsc_describe_json
+from django_nats_nkeys.models import (
+    NatsOrganizationApp,
+    NatsOrganizationOwner,
+    NatsRobotAccount,
+    NatsRobotApp,
+)
+from coolname import generate_slug
+
 from django_nats_nkeys.services import (
-    create_nats_account_org,
-    create_nats_app,
+    create_organization,
+    nsc_describe_json,
     nsc_generate_creds,
 )
-from django_nats_nkeys.models import AbstractNatsApp
-from coolname import generate_slug
 
 User = get_user_model()
 
 
 class TestServices(TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        self.user = User.objects.create(
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create(
             email="admin@test.com", password="testing1234", is_superuser=False
         )
-        self.org = create_nats_account_org(self.user)
-        self.app = create_nats_app(self.user, self.org)
-        org_user, created = self.org.get_or_add_user(self.user)
-        self.org_user = org_user
+        cls.org_name = generate_slug(3)
+        cls.org = create_organization(
+            cls.user,
+            cls.org_name,
+            org_user_defaults={"is_admin": True},
+        )
 
-    def test_create_nats_app(self):
-        assert self.org.name == self.org.json.get("name")
-        app = create_nats_app(self.user, self.org)
+        cls.org_user = NatsOrganizationUser.objects.get(user=cls.user)
+        cls.org_owner = NatsOrganizationOwner.objects.get(organization=cls.org)
+
+        cls.app_name = generate_slug(3)
+
+        cls.app = NatsOrganizationApp.objects.create_nsc(
+            app_name=cls.app_name,
+            organization_user=cls.org_user,
+            organization=cls.org_user.organization,
+        )
+        cls.robot_name = generate_slug(3)
+        cls.robot_account = NatsRobotAccount.objects.create_nsc(name=cls.robot_name)
+        cls.robot_app_name = generate_slug(3)
+        cls.robot_app = NatsRobotApp.objects.create_nsc(
+            app_name=cls.robot_app_name, account=cls.robot_account
+        )
+
+    def test_create_organization(self):
+        org = self.org
+        # assert organization was created and json matches nsc describe output
+        assert org.name == self.org_name
+        org_json = nsc_describe_json(org)
+        assert org.json == org_json
+
+        # assert organization owner was created and is user
+        org_user = self.org_user
+        org_owner = self.org_owner
+
+        assert org.owner == org_owner
+        assert org_owner.organization_user == org_user
+
+        # assert user json matches nsc describe output
+        user_json = nsc_describe_json(org_user)
+        assert org_user.json == user_json
+
+    def test_create_org_app(self):
+        org_user = self.org_user
+        app = self.app
         assert app.organization == self.org
+        assert app.organization_user == org_user
+
+        # assert app json matches nsc describe output
+        assert app.json == nsc_describe_json(app)
 
     def test_nsc_generate_creds(self):
-        app_creds = nsc_generate_creds(self.org, self.app)
-        user_creds = nsc_generate_creds(self.org, self.org_user)
+        app_creds = nsc_generate_creds(self.app)
+        user_creds = nsc_generate_creds(self.org_user)
 
         assert app_creds != user_creds
 
@@ -42,3 +92,12 @@ class TestServices(TestCase):
         assert ("------END NATS USER JWT------") in user_creds
         assert ("-----BEGIN USER NKEY SEED-----") in user_creds
         assert ("------END USER NKEY SEED------") in user_creds
+
+    def test_create_robot_account(self):
+        assert self.robot_account.name == self.robot_name
+        # assert robot account json matches nsc describe output
+        assert self.robot_account.json == nsc_describe_json(self.robot_account)
+
+    def test_create_robot_app(self):
+        assert self.robot_app.app_name == self.robot_app_name
+        assert self.robot_app.json == nsc_describe_json(self.robot_app)

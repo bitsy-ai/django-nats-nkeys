@@ -1,3 +1,4 @@
+import subprocess
 from django.db import models
 from organizations.abstract import (
     AbstractOrganization,
@@ -51,6 +52,10 @@ def _default_name():
 
 
 class NatsOrganization(AbstractOrganization):
+
+    objects = NatsOrganizationManager()
+    active = ActiveNatsOrganizationManager()
+
     json = models.JSONField(
         max_length=255, help_text="Output of `nsc describe account`", default=dict
     )
@@ -62,11 +67,46 @@ class NatsOrganization(AbstractOrganization):
     )
 
 
+class NatsOrganizationUserManager(models.Manager):
+    def create_nsc(self, **kwargs):
+        from django_nats_nkeys.services import (
+            run_nsc_and_log_output,
+            save_describe_json,
+        )
+
+        org_user = self.create(**kwargs)
+        try:
+            # add organization user for account
+            run_nsc_and_log_output(
+                [
+                    "nsc",
+                    "add",
+                    "user",
+                    "--account",
+                    org_user.organization.name,
+                    "--name",
+                    org_user.app_name,
+                    "-K",
+                    "service",
+                ]
+            )
+        except subprocess.CalledProcessError as e:
+            # nsc add account command returned "Error: the account "<name>" already exists"
+            # we can proceed to saving output of `nsc describe account <name> --json``
+            if "already exists" in e.stderr:
+                pass
+            # re-raise other errors
+            raise e
+        save_describe_json(org_user.name, org_user)
+        return org_user
+
+
 class NatsOrganizationUser(AbstractOrganizationUser):
     """
     Corresponds to a NATS user/client, intended for use for a human who owns one or more NatsApp instances and wants to publish/subscribe to all apps via signed credential.
     """
 
+    objects = NatsOrganizationUserManager()
     app_name = models.CharField(max_length=255, default=_default_name)
     json = models.JSONField(
         max_length=255, help_text="Output of `nsc describe account`", default=dict
@@ -84,8 +124,7 @@ class AbstractNatsApp(models.Model):
 
     app_name = models.CharField(max_length=255, default=_default_name)
     json = models.JSONField(
-        max_length=255,
-        help_text="Output of `nsc describe account`",
+        max_length=255, help_text="Output of `nsc describe account`", default=dict
     )
 
     allow_pub = models.CharField(
@@ -124,11 +163,21 @@ class AbstractNatsApp(models.Model):
     )
 
 
+class NatsOrganizationAppManager(models.Manager):
+    def create_nsc(self, **kwargs):
+        from django_nats_nkeys.services import nsc_add_app
+
+        obj = self.create(**kwargs)
+        return nsc_add_app(obj.organization.name, obj.app_name, obj)
+
+
 class NatsOrganizationApp(AbstractNatsApp):
     """
     Corresponds to a NATS user/client within an Account group
     https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
     """
+
+    objects = NatsOrganizationAppManager()
 
     class Meta:
         constraints = [
@@ -160,17 +209,29 @@ class NatsAccountInvitation(AbstractOrganizationInvitation):
     pass
 
 
+class NatsRobotAccountManager(models.Manager):
+    def create_nsc(self, **kwargs):
+        from django_nats_nkeys.services import nsc_add_account
+
+        # create django model
+        obj = self.create(**kwargs)
+        # try create nsc account
+        # import pdb
+
+        # pdb.set_trace()
+        return nsc_add_account(obj)
+
+
 class AbstractNatsRobotAccount(models.Model):
 
-    # objects = NatsRobotAccountManager()
+    objects = NatsRobotAccountManager()
 
     class Meta:
         abstract = True
 
     name = models.CharField(unique=True, max_length=255)
     json = models.JSONField(
-        max_length=255,
-        help_text="Output of `nsc describe account`",
+        max_length=255, help_text="Output of `nsc describe account`", default=dict
     )
     imports = models.ManyToManyField(
         NatsMessageExport, related_name="nats_robot_imports"
@@ -184,7 +245,16 @@ class NatsRobotAccount(AbstractNatsRobotAccount):
     pass
 
 
+class NatsRobotAppManager(models.Manager):
+    def create_nsc(self, **kwargs):
+        from django_nats_nkeys.services import nsc_add_app
+
+        obj = self.create(**kwargs)
+        return nsc_add_app(obj.account.name, obj.app_name, obj)
+
+
 class NatsRobotApp(AbstractNatsApp):
+    objects = NatsRobotAppManager()
     account = models.ForeignKey(
         NatsRobotAccount,
         related_name="robot_apps",
