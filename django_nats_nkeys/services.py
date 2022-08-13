@@ -503,6 +503,55 @@ def nsc_delete_account(account_name: str) -> subprocess.CompletedProcess:
     return run_nsc_and_log_output(["nsc", "delete", "account", account_name])
 
 
+def nsc_add_import(
+    src_account_name: str, dest_account_name: str, subject_pattern: str, public=False
+) -> subprocess.CompletedProcess:
+    # specify --src-acount and --remote-subject if importing a public stream
+    if public is True:
+        cmd = [
+            "nsc",
+            "add",
+            "import",
+            "--account",
+            dest_account_name,
+            "--src-account",
+            src_account_name,
+            "--remote-subject",
+            subject_pattern,
+        ]
+        # add import subject into robot account
+        return run_nsc_and_log_output(cmd)
+        # for a private export, we must generate an activation token
+    else:
+        cmd = [
+            "nsc",
+            "generate",
+            "activation",
+            "--account",
+            src_account_name,
+            "--target-account",
+            dest_account_name,
+            "--subject",
+            subject_pattern,
+        ]
+        # do not log sensitive token to stdout/stderr loggers
+        result = run_nsc_and_log_output(cmd, stdout=False, stderr=False)
+        activation_token = result.stdout
+
+        # now, import the stream using the activation token
+        # again, do not log sensitive token stdout/stderr loggers
+        cmd = [
+            "nsc",
+            "add",
+            "import",
+            "--account",
+            dest_account_name,
+            "--token",
+            activation_token,
+        ]
+        run_nsc_and_log_output(cmd, stdout=False, stderr=False)
+
+
 def nsc_robots_exports_init():
     # configure exports for org user accounts
     for nats_org in NatsOrganization.objects.all():
