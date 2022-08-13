@@ -34,11 +34,11 @@ class DjangoNatsNkeySettings:
             nats_app_model = django_apps.get_model(model_name)
         except ValueError:
             raise ImproperlyConfigured(
-                "NATS_APP_MODEL must be of the form 'app_label.model_name'."
+                "NATS_ORGANIZATION_APP_MODEL must be of the form 'app_label.model_name'."
             )
         except LookupError:
             raise ImproperlyConfigured(
-                "NATS_APP_MODEL refers to model '{model}' "
+                "NATS_ORGANIZATION_APP_MODEL refers to model '{model}' "
                 "that has not been installed.".format(model=model_name)
             )
         from django_nats_nkeys.models import NatsOrganizationOwner
@@ -50,7 +50,11 @@ class DjangoNatsNkeySettings:
         return nats_app_model
 
     def get_nats_app_model_string(self) -> str:
-        return getattr(settings, "NATS_APP_MODEL", "django_nats_nkeys.NatsApp")
+        return getattr(
+            settings,
+            "NATS_ORGANIZATION_APP_MODEL",
+            "django_nats_nkeys.NatsOrganizationApp",
+        )
 
     def get_nats_app_model(self) -> Model:
         model_name = self.get_nats_app_model_string()
@@ -58,11 +62,11 @@ class DjangoNatsNkeySettings:
             nats_app_model = django_apps.get_model(model_name)
         except ValueError:
             raise ImproperlyConfigured(
-                "NATS_APP_MODEL must be of the form 'app_label.model_name'."
+                "NATS_ORGANIZATION_APP_MODEL must be of the form 'app_label.model_name'."
             )
         except LookupError:
             raise ImproperlyConfigured(
-                "NATS_APP_MODEL refers to model '{model}' "
+                "NATS_ORGANIZATION_APP_MODEL refers to model '{model}' "
                 "that has not been installed.".format(model=model_name)
             )
         from django_nats_nkeys.models import AbstractNatsApp

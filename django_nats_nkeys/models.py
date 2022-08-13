@@ -5,10 +5,45 @@ from organizations.abstract import (
     AbstractOrganizationOwner,
     AbstractOrganizationInvitation,
 )
+from organizations.managers import OrgManager, ActiveOrgManager
+
 from coolname import generate_slug
 
 
 # ref: https://django-organizations.readthedocs.io/en/latest/cookbook.html#multiple-organizations-with-simple-inheritance
+
+
+class NatsMessageExportType(models.TextChoices):
+    SERVICE = (
+        "service",
+        "Export is a service: https://docs.nats.io/using-nats/nats-tools/nsc/services",
+    )
+    STREAM = (
+        "stream",
+        "Export is a stream: https://docs.nats.io/using-nats/nats-tools/nsc/streams",
+    )
+
+
+class NatsMessageExport(models.Model):
+
+    name = models.CharField(unique=True, max_length=255)
+    subject_pattern = models.CharField(unique=True, max_length=255)
+    public = models.BooleanField()
+    export_type = models.CharField(max_length=8, choices=NatsMessageExportType.choices)
+
+
+class NatsOrganizationManager(OrgManager):
+    def create_nsc(self, **kwargs):
+        from django_nats_nkeys.services import nsc_add_account
+
+        # create django model
+        org = self.create(**kwargs)
+        # try create nsc account
+        return nsc_add_account(org)
+
+
+class ActiveNatsOrganizationManager(NatsOrganizationManager, ActiveOrgManager):
+    pass
 
 
 def _default_name():
@@ -18,6 +53,12 @@ def _default_name():
 class NatsOrganization(AbstractOrganization):
     json = models.JSONField(
         max_length=255, help_text="Output of `nsc describe account`", default=dict
+    )
+    imports = models.ManyToManyField(
+        NatsMessageExport, related_name="nats_organization_imports"
+    )
+    exports = models.ManyToManyField(
+        NatsMessageExport, related_name="nats_organization_exports"
     )
 
 
@@ -40,6 +81,56 @@ class AbstractNatsApp(models.Model):
 
     class Meta:
         abstract = True
+
+    app_name = models.CharField(max_length=255, default=_default_name)
+    json = models.JSONField(
+        max_length=255,
+        help_text="Output of `nsc describe account`",
+    )
+
+    allow_pub = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="add publish permissions, comma separated list. equivalent to `nsc add user ... --allow-pub=<permissions>`",
+    )
+
+    allow_pubsub = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="add publish/subscribe permissions, comma separated list. equivalent to `nsc add user ... --allow-pubsub=<permissions>`",
+    )
+
+    allow_sub = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="add subscribe permissions, comma separated list. equivalent to `nsc add user ... --allow-sub=<permissions>`",
+    )
+    deny_pub = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="deny publish permissions, comma separated list. equivalent to `nsc add user ... --deny-pub=<permissions>`",
+    )
+
+    deny_pubsub = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="deny publish/subscribe permissions, comma separated list. equivalent to `nsc add user ... --deny-pubsub=<permissions>`",
+    )
+
+    deny_sub = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="deny subscribe permissions, comma separated list. equivalent to `nsc add user ... --deny-sub=<permissions>`",
+    )
+
+
+class NatsOrganizationApp(AbstractNatsApp):
+    """
+    Corresponds to a NATS user/client within an Account group
+    https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
+    """
+
+    class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=["app_name", "organization_user"],
@@ -47,7 +138,6 @@ class AbstractNatsApp(models.Model):
             )
         ]
 
-    app_name = models.CharField(max_length=255, default=_default_name)
     organization_user = models.ForeignKey(
         NatsOrganizationUser, on_delete=models.CASCADE, related_name="nats_apps"
     )
@@ -56,19 +146,6 @@ class AbstractNatsApp(models.Model):
         on_delete=models.CASCADE,
         related_name="nats_apps",
     )
-    json = models.JSONField(
-        max_length=255,
-        help_text="Output of `nsc describe account`",
-    )
-
-
-class NatsApp(AbstractNatsApp):
-    """
-    Corresponds to a NATS user/client within an Account group
-    https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
-    """
-
-    pass
 
 
 class NatsOrganizationOwner(AbstractOrganizationOwner):
@@ -81,3 +158,35 @@ class NatsAccountInvitation(AbstractOrganizationInvitation):
     """Stores invitations for adding users to organizations"""
 
     pass
+
+
+class AbstractNatsRobotAccount(models.Model):
+
+    # objects = NatsRobotAccountManager()
+
+    class Meta:
+        abstract = True
+
+    name = models.CharField(unique=True, max_length=255)
+    json = models.JSONField(
+        max_length=255,
+        help_text="Output of `nsc describe account`",
+    )
+    imports = models.ManyToManyField(
+        NatsMessageExport, related_name="nats_robot_imports"
+    )
+    exports = models.ManyToManyField(
+        NatsMessageExport, related_name="nats_robot_exports"
+    )
+
+
+class NatsRobotAccount(AbstractNatsRobotAccount):
+    pass
+
+
+class NatsRobotApp(AbstractNatsApp):
+    account = models.ForeignKey(
+        NatsRobotAccount,
+        related_name="robot_apps",
+        on_delete=models.CASCADE,
+    )
