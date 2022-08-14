@@ -29,4 +29,4 @@ class TestCommand(TestCase):
             filename = f.name
         # exit context and delete file. nsc doesn't have an --overwrite flag for nsc describe... command will fail if file exists
         call_command("nsc_operator_jwt", "--export", f"{f.name}")
-        call_command("nsc_operator_jwt", "--import", f"{f.name}")
+        call_command("nsc_operator_jwt", "--import", f"{f.name}", "--force")

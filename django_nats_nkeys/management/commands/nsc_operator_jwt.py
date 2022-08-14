@@ -25,18 +25,23 @@ class Command(BaseCommand):
             help="Operator name",
             default=nats_nkeys_settings.NATS_NKEYS_OPERATOR_NAME,
         )
+        parser.add_argument("--force", store_value=True, default=False)
 
     def handle(self, *args, **kwargs):
         importf = kwargs.get("import")
         exportf = kwargs.get("export")
         name = kwargs.get("name")
+        force = kwargs.get("force")
         if importf is None and exportf is None:
             raise ValueError("One of --import|export is required")
         if importf is not None and exportf is not None:
             raise ValueError("Please specify one of --import|export (received both)")
 
         if importf is not None:
-            run_nsc_and_log_output(["nsc", "add", "operator", "-u", importf])
+            cmd = ["nsc", "add", "operator", "-u", importf]
+            if force is False:
+                cmd += ["--force"]
+            run_nsc_and_log_output(cmd)
             self.stdout.write(
                 self.style.SUCCESS(f"Success! Imported from JWT {importf}")
             )
