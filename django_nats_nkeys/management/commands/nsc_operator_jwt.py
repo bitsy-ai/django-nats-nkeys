@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
         if importf is not None:
             cmd = ["nsc", "add", "operator", "-u", importf]
-            if force is False:
+            if force is True:
                 cmd += ["--force"]
             run_nsc_and_log_output(cmd)
             self.stdout.write(
