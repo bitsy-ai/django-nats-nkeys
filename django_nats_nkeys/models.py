@@ -67,44 +67,6 @@ class NatsOrganization(AbstractOrganization):
     )
 
 
-# class NatsOrganizationUserManager(models.Manager):
-#     def create_nsc(self, **kwargs):
-#         from django_nats_nkeys.services import (
-#             run_nsc_and_log_output,
-#             save_describe_json,
-#             nsc_push,
-#         )
-
-#         org_user = self.create(**kwargs)
-#         try:
-#             # add organization user for account
-#             run_nsc_and_log_output(
-#                 [
-#                     "nsc",
-#                     "add",
-#                     "user",
-#                     "--account",
-#                     org_user.organization.name,
-#                     "--name",
-#                     org_user.app_name,
-#                     "-K",
-#                     "service",
-#                 ]
-#             )
-#         except subprocess.CalledProcessError as e:
-#             # nsc add account command returned "Error: the account "<name>" already exists"
-#             # we can proceed to saving output of `nsc describe account <name> --json``
-#             if "already exists" in e.stderr:
-#                 pass
-#             # re-raise other errors
-#             raise e
-#         save_describe_json(
-#             org_user.organization.name, org_user, app_name=org_user.app_name
-#         )
-#         nsc_push(account=org_user.organization.name)
-#         return org_user
-
-
 class AbstractNatsApp(models.Model):
     """
     Corresponds to a NATS user/client within an Account group, intended for use by application
