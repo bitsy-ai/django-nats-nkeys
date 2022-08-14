@@ -67,52 +67,42 @@ class NatsOrganization(AbstractOrganization):
     )
 
 
-class NatsOrganizationUserManager(models.Manager):
-    def create_nsc(self, **kwargs):
-        from django_nats_nkeys.services import (
-            run_nsc_and_log_output,
-            save_describe_json,
-        )
+# class NatsOrganizationUserManager(models.Manager):
+#     def create_nsc(self, **kwargs):
+#         from django_nats_nkeys.services import (
+#             run_nsc_and_log_output,
+#             save_describe_json,
+#             nsc_push,
+#         )
 
-        org_user = self.create(**kwargs)
-        try:
-            # add organization user for account
-            run_nsc_and_log_output(
-                [
-                    "nsc",
-                    "add",
-                    "user",
-                    "--account",
-                    org_user.organization.name,
-                    "--name",
-                    org_user.app_name,
-                    "-K",
-                    "service",
-                ]
-            )
-        except subprocess.CalledProcessError as e:
-            # nsc add account command returned "Error: the account "<name>" already exists"
-            # we can proceed to saving output of `nsc describe account <name> --json``
-            if "already exists" in e.stderr:
-                pass
-            # re-raise other errors
-            raise e
-        save_describe_json(
-            org_user.organization.name, org_user, app_name=org_user.app_name
-        )
-        return org_user
-
-
-class NatsOrganizationUser(AbstractOrganizationUser):
-    """
-    Corresponds to a NATS user/client, intended for use for a human who owns one or more NatsApp instances and wants to publish/subscribe to all apps via signed credential.
-    """
-
-    objects = NatsOrganizationUserManager()
-    app_name = models.CharField(max_length=255, default=_default_name)
-    json = models.JSONField(
-        max_length=255, help_text="Output of `nsc describe account`", default=dict
-    )
+#         org_user = self.create(**kwargs)
+#         try:
+#             # add organization user for account
+#             run_nsc_and_log_output(
+#                 [
+#                     "nsc",
+#                     "add",
+#                     "user",
+#                     "--account",
+#                     org_user.organization.name,
+#                     "--name",
+#                     org_user.app_name,
+#                     "-K",
+#                     "service",
+#                 ]
+#             )
+#         except subprocess.CalledProcessError as e:
+#             # nsc add account command returned "Error: the account "<name>" already exists"
+#             # we can proceed to saving output of `nsc describe account <name> --json``
+#             if "already exists" in e.stderr:
+#                 pass
+#             # re-raise other errors
+#             raise e
+#         save_describe_json(
+#             org_user.organization.name, org_user, app_name=org_user.app_name
+#         )
+#         nsc_push(account=org_user.organization.name)
+#         return org_user
 
 
 class AbstractNatsApp(models.Model):
@@ -171,6 +161,14 @@ class NatsOrganizationAppManager(models.Manager):
 
         obj = self.create(**kwargs)
         return nsc_add_app(obj.organization.name, obj.app_name, obj)
+
+
+class NatsOrganizationUser(AbstractOrganizationUser, AbstractNatsApp):
+    """
+    Corresponds to a NATS user/client, intended for use for a human who owns one or more NatsApp instances and wants to publish/subscribe to all apps via signed credential.
+    """
+
+    objects = NatsOrganizationAppManager()
 
 
 class NatsOrganizationApp(AbstractNatsApp):
