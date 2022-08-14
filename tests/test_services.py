@@ -56,7 +56,7 @@ class TestServices(TestCase):
         org = self.org
         # assert organization was created and json matches nsc describe output
         assert org.name == self.org_name
-        org_json = nsc_describe_json(org)
+        org_json = nsc_describe_json(org.name)
         assert org.json == org_json
 
         # assert organization owner was created and is user
@@ -67,7 +67,9 @@ class TestServices(TestCase):
         assert org_owner.organization_user == org_user
 
         # assert user json matches nsc describe output
-        user_json = nsc_describe_json(org_user)
+        user_json = nsc_describe_json(
+            org_user.organization.name, app_name=org_user.app_name
+        )
         assert org_user.json == user_json
 
     def test_create_org_app(self):
@@ -77,7 +79,9 @@ class TestServices(TestCase):
         assert app.organization_user == org_user
 
         # assert app json matches nsc describe output
-        assert app.json == nsc_describe_json(app)
+        assert app.json == nsc_describe_json(
+            app.organization.name, app_name=app.app_name
+        )
 
     def test_nsc_generate_creds(self):
         app_creds = nsc_generate_creds(self.app.organization.name, self.app.app_name)
@@ -108,11 +112,13 @@ class TestServices(TestCase):
     def test_create_robot_account(self):
         assert self.robot_account.name == self.robot_name
         # assert robot account json matches nsc describe output
-        assert self.robot_account.json == nsc_describe_json(self.robot_account)
+        assert self.robot_account.json == nsc_describe_json(self.robot_account.name)
 
     def test_create_robot_app(self):
         assert self.robot_app.app_name == self.robot_app_name
-        assert self.robot_app.json == nsc_describe_json(self.robot_app)
+        assert self.robot_app.json == nsc_describe_json(
+            self.robot_app.account.name, app_name=self.robot_app.app_name
+        )
 
     def test_imports_and_exports_stream(self):
         export_name = "all-public"
