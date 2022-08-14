@@ -25,7 +25,7 @@ class Command(BaseCommand):
             help="Operator name",
             default=nats_nkeys_settings.NATS_NKEYS_OPERATOR_NAME,
         )
-        parser.add_argument("--force", store_value=True, default=False)
+        parser.add_argument("--force", action="store_true", default=False)
 
     def handle(self, *args, **kwargs):
         importf = kwargs.get("import")
