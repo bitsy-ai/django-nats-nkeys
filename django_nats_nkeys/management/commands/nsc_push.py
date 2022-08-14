@@ -1,18 +1,17 @@
 from click import BaseCommand
 from django.core.management.base import BaseCommand, CommandParser
 
-from django_nats_nkeys.settings import nats_nkeys_settings
-from django_nats_nkeys.services import nsc_export
+from django_nats_nkeys.services import nsc_push
 
 
 class Command(BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
-            "--dir",
-            type=str,
-            help="Export nkeys to path",
-            default=nats_nkeys_settings.NATS_NKEYS_EXPORT_DIR,
+            "--account",
+            help="Push a specific account. If not provided, push --all will be executed",
+            required=False,
         )
+
         parser.add_argument(
             "--force",
             help="Overwrite existing keys in --dir",
@@ -21,6 +20,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        path = kwargs.get("dir")
         force = kwargs.get("force")
-        nsc_export(path, force=force)
+        account = kwargs.get("account")
+        nsc_push(account=account, force=force)

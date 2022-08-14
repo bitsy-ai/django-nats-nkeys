@@ -1,5 +1,3 @@
-import subprocess
-import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
@@ -15,13 +13,11 @@ class TestCommand(TestCase):
             email="admin@test.com", password="testing1234", is_superuser=True
         )
 
-    def test_nsc_import_export(self):
+    def test_nsc_push(self):
         # test non-zero exits
-        call_command("nsc_export", "--force")
-        call_command("nsc_import")
-        # test raises error if force flag not provided
-        with pytest.raises(subprocess.CalledProcessError):
-            call_command("nsc_export")
+        call_command("nsc_push")
+        call_command("nsc_push", "--force")
 
     def test_nsc_pull(self):
         call_command("nsc_pull")
+        call_command("nsc_pull", "--force")

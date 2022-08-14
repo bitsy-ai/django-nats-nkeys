@@ -7,6 +7,10 @@
 ### Linux ###
 *~
 
+.nats/config
+.nats/keys
+.nats/stores
+
 .nats/*.nk
 .nats/DjangoOperator.conf
 # temporary files which can be created if a process still has a handle open of a deleted file
