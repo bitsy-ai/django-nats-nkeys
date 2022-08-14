@@ -1,5 +1,5 @@
 import subprocess
-from typing import List, Union, Tuple, Dict, Any
+from typing import List, Optional, Union, Tuple, Dict, Any
 import logging
 import json
 import os
@@ -269,114 +269,39 @@ def create_nats_sk_service(
 
 
 def nsc_describe_json(
-    obj: Union[
-        NatsOrganization,
-        NatsRobotAccountModel,
-        NatsOrganizationUser,
-        NatsOrganizationApp,
-    ],
+    account_name: str, app_name: Optional[str] = None
 ) -> Dict[Any, Any]:
-    if isinstance(obj, NatsOrganization) or isinstance(obj, NatsRobotAccountModel):
+
+    if app_name is None:
         result = run_nsc_and_log_output(
-            ["nsc", "describe", "account", "--name", obj.name, "--json"]
-        )
-    elif isinstance(obj, NatsOrganizationUser) or isinstance(obj, NatsOrganizationApp):
-        result = run_nsc_and_log_output(
-            [
-                "nsc",
-                "describe",
-                "user",
-                "--name",
-                obj.app_name,
-                "--account",
-                obj.organization.name,
-                "--json",
-            ]
-        )
-    elif isinstance(obj, NatsRobotAppModel):
-        result = run_nsc_and_log_output(
-            [
-                "nsc",
-                "describe",
-                "user",
-                "--name",
-                obj.app_name,
-                "--account",
-                obj.account.name,
-                "--json",
-            ]
+            ["nsc", "describe", "account", "--name", account_name, "--json"]
         )
     else:
-        raise ValueError(
-            "Invalid obj type. Expected one of Union[NatsOrganization, NatsRobotAccountModel, NatsOrganizationUser] but got %s",
-            obj,
+        result = run_nsc_and_log_output(
+            [
+                "nsc",
+                "describe",
+                "user",
+                "--name",
+                app_name,
+                "--account",
+                account_name,
+                "--json",
+            ]
         )
+
     return json.loads(result.stdout)
 
 
 def save_describe_json(
-    name: str,
+    account_name: str,
     obj: Union[NatsOrganization, NatsRobotAccountModel, NatsOrganizationUser],
+    app_name: Optional[str] = None,
 ) -> Union[NatsOrganization, NatsRobotAccountModel]:
 
-    obj.json = nsc_describe_json(obj)
+    obj.json = nsc_describe_json(account_name, app_name=app_name)
     obj.save()
     return obj
-
-
-# def create_nats_account_org(user: User) -> NatsOrganization:
-#     # create organization
-#     org = create_organization(
-#         user,
-#         generate_slug(3),
-#         org_user_defaults={"is_admin": True},
-#         model=nats_nkeys_settings.get_nats_account_model(),
-#     )
-#     # create account via nsc (log non-sensitive public key subject)
-#     run_nsc_and_log_output(["nsc", "add", "account", "--name", org.name])
-#     # generate a signing key for account (log non-sensitive public key subject)
-#     run_nsc_and_log_output(
-#         ["nsc", "edit", "account", "--name", org.name, "--sk", "generate"]
-#     )
-#     # push to remote
-#     nsc_push(account_name=org.name)
-#     result = run_nsc_and_log_output(["nsc", "describe", "account", org.name, "--json"])
-#     describe_account = json.loads(result.stdout)
-#     org.json = describe_account
-#     org.save()
-
-#     # add service for account (log non-sensitive public key subject)
-#     org = create_nats_sk_service(
-#         account_name=org.name,
-#         signing_key=describe_account["nats"]["signing_keys"][0],
-#         obj=org,
-#     )
-
-#     org_user, created = org.get_or_add_user(user)
-#     # add organization user for account
-#     run_nsc_and_log_output(
-#         [
-#             "nsc",
-#             "add",
-#             "user",
-#             "--account",
-#             org.name,
-#             "--name",
-#             org_user.app_name,
-#             "-K",
-#             "service",
-#         ]
-#     )
-#     # describe app chain of trust, public signing key fingerprint, public key, claims
-#     result = run_nsc_and_log_output(
-#         ["nsc", "describe", "user", org_user.app_name, "--json"],
-#     )
-#     describe_user = json.loads(result.stdout)
-#     org_user.json = describe_user
-#     nsc_push(account_name=org.name)
-#     org_user.save()
-
-#     return org
 
 
 def nsc_add_app(
@@ -427,7 +352,7 @@ def nsc_add_app(
     # run edit command if base_cmd has been modified
     if cmd != base_cmd:
         run_nsc_and_log_output(cmd)
-    return save_describe_json(app_name, obj)
+    return save_describe_json(account_name, obj, app_name=app_name)
 
 
 def create_nats_app(
@@ -475,27 +400,11 @@ def create_nats_app(
     return nats_app
 
 
-def nsc_generate_creds(
-    app: Union[NatsOrganizationApp, NatsOrganizationUser, NatsRobotAppModel]
-) -> str:
-    if isinstance(app, NatsOrganizationApp) or isinstance(app, NatsOrganizationUser):
-        result = run_nsc_and_log_output(
-            [
-                "nsc",
-                "generate",
-                "creds",
-                "--account",
-                app.organization.name,
-                "--name",
-                app.app_name,
-            ],
-            stdout=False,  # do not log sensitive credentials to stdout
-        )
-    else:
-        raise ValueError(
-            "Invalid obj type. Expected one of Union[NatsOrganizationApp, NatsOrganizationUser, NatsRobotAppModel] but got %s",
-            app,
-        )
+def nsc_generate_creds(account_name: str, app_name: str) -> str:
+    result = run_nsc_and_log_output(
+        ["nsc", "generate", "creds", "--account", account_name, "--name", app_name],
+        stdout=False,  # do not log sensitive credentials to attached stdout logger, just capture and store in memory
+    )
     return result.stdout
 
 

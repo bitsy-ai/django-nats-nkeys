@@ -80,10 +80,15 @@ class TestServices(TestCase):
         assert app.json == nsc_describe_json(app)
 
     def test_nsc_generate_creds(self):
-        app_creds = nsc_generate_creds(self.app)
-        user_creds = nsc_generate_creds(self.org_user)
+        app_creds = nsc_generate_creds(self.app.organization.name, self.app.app_name)
+        user_creds = nsc_generate_creds(
+            self.org_user.organization.name, self.org_user.app_name
+        )
+        robot_app_creds = nsc_generate_creds(
+            self.robot_app.account.name, self.robot_app.app_name
+        )
 
-        assert app_creds != user_creds
+        assert app_creds != user_creds != robot_app_creds
 
         assert ("-----BEGIN NATS USER JWT-----") in app_creds
         assert ("------END NATS USER JWT------") in app_creds
@@ -94,6 +99,11 @@ class TestServices(TestCase):
         assert ("------END NATS USER JWT------") in user_creds
         assert ("-----BEGIN USER NKEY SEED-----") in user_creds
         assert ("------END USER NKEY SEED------") in user_creds
+
+        assert ("-----BEGIN NATS USER JWT-----") in robot_app_creds
+        assert ("------END NATS USER JWT------") in robot_app_creds
+        assert ("-----BEGIN USER NKEY SEED-----") in robot_app_creds
+        assert ("------END USER NKEY SEED------") in robot_app_creds
 
     def test_create_robot_account(self):
         assert self.robot_account.name == self.robot_name

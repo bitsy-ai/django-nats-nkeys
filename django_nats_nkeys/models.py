@@ -97,7 +97,9 @@ class NatsOrganizationUserManager(models.Manager):
                 pass
             # re-raise other errors
             raise e
-        save_describe_json(org_user.name, org_user)
+        save_describe_json(
+            org_user.organization.name, org_user, app_name=org_user.app_name
+        )
         return org_user
 
 
