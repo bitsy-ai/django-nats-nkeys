@@ -1,20 +1,6 @@
 # Django Nats NKEYS
 
-[![image](https://img.shields.io/pypi/v/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/)
-
-[![image](https://img.shields.io/pypi/pyversions/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/)
-
-[![image](https://img.shields.io/pypi/djversions/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/)
-
-[![image](https://img.shields.io/pypi/wheel/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/)
-
-[![image](https://img.shields.io/discord/773452324692688956)](https://discord.gg/Y848Hq9xKh)
-
-[![image](https://img.shields.io/github/workflow/status/bitsy-ai/django-nats-nkeys/Test)](https://github.com/bitsy-ai/django-nats-nkeys)
-
-[![image](https://img.shields.io/codecov/c/github/bitsy-ai/django-nats-nkeys)](https://github.com/bitsy-ai/django-nats-nkeys)
-
-[![image](https://img.shields.io/github/release-date-pre/bitsy-ai/django-nats-nkeys)](https://github.com/bitsy-ai/django-nats-nkeys)
+[![image](https://img.shields.io/pypi/v/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/) [![image](https://img.shields.io/pypi/pyversions/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/) [![image](https://img.shields.io/pypi/djversions/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/) [![image](https://img.shields.io/pypi/wheel/django-nats-nkeys)](https://pypi.org/project/django-nats-nkeys/) [![image](https://img.shields.io/discord/773452324692688956)](https://discord.gg/Y848Hq9xKh) [![image](https://img.shields.io/github/workflow/status/bitsy-ai/django-nats-nkeys/Test)](https://github.com/bitsy-ai/django-nats-nkeys) [![image](https://img.shields.io/codecov/c/github/bitsy-ai/django-nats-nkeys)](https://github.com/bitsy-ai/django-nats-nkeys) [![image](https://img.shields.io/github/release-date-pre/bitsy-ai/django-nats-nkeys)](https://github.com/bitsy-ai/django-nats-nkeys)
 
 [NATS](https://docs.nats.io/nats-concepts/what-is-nats) is an
 infrastructure platform for building message-based services.
@@ -64,19 +50,37 @@ Contributor's Guide
 Settings
 ===========
 
+### Basic Settings
+`NATS_NSC_DATA_DIR` (default: `"/var/lib/nats/nsc/stores"` or `$NSC_STORE` environment var)
+`NATS_NSC_CONFIG_DIR`(default: `"/var/lib/nats/nsc/config"` or `$NSC_HOME` environment var)
+`NATS_NSC_KEYSTORE_DIR` (default: `"/var/lib/nats/nsc/keys"` or `$NKEYS_PATH` environment var)
 `NATS_SERVER_URI` (default: `"nats://nats:4222"`)
-`NATS_NKEYS_IMPORT_DIR` (default: `".nats/"`)
+`NATS_NKEYS_IMPORT_DIR` (default: `".nats/"`, )
 `NATS_NKEYS_EXPORT_DIR` (default: `".nats/"`)
 `NATS_NKEYS_OPERATOR_NAME` (default: `"DjangoOperator"`)
 
-`NATS_ACCOUNT_OWNER_MODEL` (default: `"django_nats_nkeys.NatsOrganizationOwner"`)
+
+### Organization Models
+* Based on [Django organizations](https://github.com/bennylope/django-organizations)
+* An `Organization` represents an `account` in [NATS multi-tenant account model](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts)
+* An `App` represents a `user` in [NATS multi-tenant account model](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts)
+  
+
+`NATS_ORGANIZATION_MODEL` (default: `"django_nats_nkeys.NatsOrganization"`)
+* Must subclass `django_nats_nkeys.models.NatsOrganization`
+
+`NATS_ORGANIZATION_OWNER_MODEL` (default: `"django_nats_nkeys.NatsOrganizationOwner"`)
 * Must subclass `django_nats_nkey.models.NatsOrganizationOwner`
 
-`NATS_APP_MODEL` (default: `"django_nats_nkey.models.NatsApp"`)
+`NATS_ORGANIZATION_APP_MODEL` (default: `"django_nats_nkey.NatsOrganizationApp"`)
 * Must subclass `django_nats_nkey.models.AbstractNatsApp`
 
-`NATS_ACCOUNT_MODEL` (default: `"django_nats_nkeys.NatsOrganization"`)
-* Must subclass `django_nats_nkeys.NatsOrganization`
-
-`NATS_USER_MODEL` (default: `"django_nats_nkeys.models.NatsOrganizationUser"`)
+`NATS_ORGANIZATION_USER_MODEL` (default: `"django_nats_nkeys.models.NatsOrganizationUser"`)
 * Must subclass `django_nats_nkeys.models.NatsOrganizationUser`
+
+
+### Robot/Automation Models
+
+`NATS_ROBOT_APP_MODEL` (default: `"django_nats_nkeys.NatsRobotApp"`)
+`NATS_ROBOT_ACCOUNT_MODEL` (default: `"django_nats_nkeys.NatsRobotAccount"`)
+
