@@ -36,22 +36,22 @@ class TestSettings(TestCase):
     def test_custom_operator_name(self):
         assert nats_nkeys_settings.NATS_NKEYS_OPERATOR_NAME == "MyCustomOperator"
 
-    @override_settings(NATS_ACCOUNT_MODEL="invalid")
+    @override_settings(NATS_ORGANIZATION_MODEL="invalid")
     def test_invalid_account_model(self):
         with pytest.raises(ImproperlyConfigured):
             nats_nkeys_settings.get_nats_account_model()
 
-    @override_settings(NATS_ACCOUNT_OWNER_MODEL="invalid")
+    @override_settings(NATS_ORGANIZATION_OWNER_MODEL="invalid")
     def test_invalid_account_owner_model(self):
         with pytest.raises(ImproperlyConfigured):
-            nats_nkeys_settings.get_nats_account_owner_model()
+            nats_nkeys_settings.get_NATS_ORGANIZATION_OWNER_MODEL()
 
     @override_settings(NATS_ORGANIZATION_APP_MODEL="invalid")
     def test_invalid_app_model(self):
         with pytest.raises(ImproperlyConfigured):
             nats_nkeys_settings.get_nats_organization_app_model()
 
-    @override_settings(NATS_USER_MODEL="invalid")
+    @override_settings(NATS_ORGANIZATION_USER_MODEL="invalid")
     def test_invalid_user_model(self):
         with pytest.raises(ImproperlyConfigured):
             nats_nkeys_settings.get_nats_user_model()
@@ -77,7 +77,8 @@ class TestSettings(TestCase):
         assert nats_nkeys_settings.get_nats_user_model() is NatsOrganizationUser
         assert nats_nkeys_settings.get_nats_account_model() is NatsOrganization
         assert (
-            nats_nkeys_settings.get_nats_account_owner_model() is NatsOrganizationOwner
+            nats_nkeys_settings.get_NATS_ORGANIZATION_OWNER_MODEL()
+            is NatsOrganizationOwner
         )
         assert (
             nats_nkeys_settings.get_nats_organization_app_model() is NatsOrganizationApp

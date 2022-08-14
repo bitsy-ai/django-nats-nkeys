@@ -10,7 +10,7 @@ from organizations.models import (
 )
 
 NatsOrganization = nats_nkeys_settings.get_nats_account_model()
-NatsOrganizationOwner = nats_nkeys_settings.get_nats_account_owner_model()
+NatsOrganizationOwner = nats_nkeys_settings.get_NATS_ORGANIZATION_OWNER_MODEL()
 NatsApp = nats_nkeys_settings.get_nats_organization_app_model()
 NatsOrganizationUser = nats_nkeys_settings.get_nats_user_model()
 
