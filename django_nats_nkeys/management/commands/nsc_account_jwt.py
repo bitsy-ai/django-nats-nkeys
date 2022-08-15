@@ -56,10 +56,12 @@ class Command(BaseCommand):
                 "--name",
                 name,
                 "--raw",
-                "--output-file",
-                exportf,
             ]
-            run_nsc_and_log_output(cmd)
+            # TRACKING https://github.com/nats-io/nsc/issues/498
+            # --output-file cannot be re-imported via --import, so write undecorated jwt out
+            result = run_nsc_and_log_output(cmd)
+            with open(exportf, "w+") as f:
+                f.write(result.stdout)
             self.stdout.write(
                 self.style.SUCCESS(f"Success! Output account JWT to {exportf}")
             )
