@@ -167,7 +167,9 @@ def nsc_validate(account_name: Optional[str] = None) -> NSCValidator:
         cmd = ["nsc", "validate", "--account", account_name]
 
     cmd_result = run_nsc_and_log_output(cmd)
-    return NSCValidator(cmd_result)
+    validator = NSCValidator(cmd_result)
+    validator.run()
+    return validator
 
 
 def run_nsc_and_log_output(
