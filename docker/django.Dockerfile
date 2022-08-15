@@ -2,7 +2,7 @@ FROM python:3.9-slim-buster
 
 RUN apt-get update \
   # dependencies for building Python packages
-  && apt-get install -y build-essential unzip curl \
+  && apt-get install -y build-essential unzip \
   # psycopg2 dependencies
   && apt-get install -y libpq-dev \
   # Translations dependencies
@@ -17,7 +17,7 @@ RUN apt-get update \
 
 # install nsc command-line tool
 RUN curl -L https://raw.githubusercontent.com/nats-io/nsc/8f690c29910575597b8a3954154be4ee9e79519a/install.py | python
-RUN cp /root/.nsccli/bin/nsc /usr/local/bin/nsc
+
 
 RUN mkdir /workspace
 WORKDIR /workspace
