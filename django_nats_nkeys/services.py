@@ -142,8 +142,36 @@ def nsc_push(account=None, force=False) -> subprocess.CompletedProcess:
     return result
 
 
+class NSCValidator:
+    result: Optional[subprocess.CompletedProcess] = None
+
+    def __init__(self, account_name: Optional[str] = None) -> None:
+        self.account_name = account_name
+
+    def ok(self) -> bool:
+        return self.result.returncode == 0
+
+    def run(self):
+        if self.account_name is None:
+            cmd = ["nsc", "validate", "--all-accounts"]
+        else:
+            cmd = ["nsc", "validate", "--account", self.account_name]
+        result = run_nsc_and_log_output(cmd, check=False)
+        self.result = result
+
+
+def nsc_validate(account_name: Optional[str] = None) -> NSCValidator:
+    if account_name is None:
+        cmd = ["nsc", "validate", "--all-accounts"]
+    else:
+        cmd = ["nsc", "validate", "--account", account_name]
+
+    cmd_result = run_nsc_and_log_output(cmd)
+    return NSCValidator(cmd_result)
+
+
 def run_nsc_and_log_output(
-    cmd: List[str], stdout=True, stderr=True, pull=True, push=True
+    cmd: List[str], stdout=True, stderr=True, check=True
 ) -> subprocess.CompletedProcess:
     if "nsc" not in cmd:
         raise ValueError(
@@ -166,7 +194,9 @@ def run_nsc_and_log_output(
 
     if result.stderr and stderr:
         logger.error(result.stderr)
-    result.check_returncode()
+
+    if check is True:
+        result.check_returncode()
     return result
 
 
@@ -205,14 +235,12 @@ def nsc_init_operator(name, outdir, server) -> str:
     # https://docs.nats.io/running-a-nats-service/nats_admin/security/jwt#system-account
 
     # initialize operator
-    run_nsc_and_log_output(
-        ["nsc", "add", "operator", "--name", name, "--sys"], pull=False
-    )
+    run_nsc_and_log_output(["nsc", "add", "operator", "--name", name, "--sys"])
     # generate a signing key for operator
-    run_nsc_and_log_output(["nsc", "edit", "operator", "--sk", "generate"], pull=False)
+    run_nsc_and_log_output(["nsc", "edit", "operator", "--sk", "generate"])
     # add account-jwt-server-url to operator
     run_nsc_and_log_output(
-        ["nsc", "edit", "operator", "--account-jwt-server-url", server], pull=False
+        ["nsc", "edit", "operator", "--account-jwt-server-url", server]
     )
 
     # set operator context and generate config
@@ -226,8 +254,7 @@ def nsc_init_operator(name, outdir, server) -> str:
             "--nats-resolver",
             "--config-file",
             filename,
-        ],
-        pull=False,
+        ]
     )
     return filename
 

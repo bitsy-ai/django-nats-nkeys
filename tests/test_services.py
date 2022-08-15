@@ -1,7 +1,12 @@
+from wsgiref.validate import validator
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from django_nats_nkeys.services import NatsOrganizationUser, nsc_describe_json
+from django_nats_nkeys.services import (
+    NatsOrganizationUser,
+    nsc_describe_json,
+    nsc_validate,
+)
 from django_nats_nkeys.models import (
     NatsMessageExport,
     NatsMessageExportType,
@@ -183,3 +188,9 @@ class TestServices(TestCase):
             == subject_pattern
             == self.org.json["nats"]["exports"][0]["subject"]
         )
+
+    def test_validator(self):
+        validator = nsc_validate(account_name=self.org_name)
+        assert validator.ok() is True
+        validator = nsc_validate(account_name=self.robot_account.name)
+        assert validator.ok() is True
