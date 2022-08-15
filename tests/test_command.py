@@ -30,8 +30,7 @@ class TestCommand(TestCase):
     def test_nsc_operator_jwt(self):
 
         with tempfile.TemporaryDirectory() as d:
-            # exit context and delete file. nsc doesn't have an --overwrite flag for nsc describe... command will fail if file exists
-            operator_jwt = os.path.join(d.name, "operator.jwt")
+            operator_jwt = os.path.join(d, "operator.jwt")
             call_command("nsc_operator_jwt", "--export", operator_jwt)
             call_command("nsc_operator_jwt", "--import", operator_jwt, "--force")
 
@@ -43,14 +42,14 @@ class TestCommand(TestCase):
                 org_user_defaults={"is_admin": True},
             )
             # test account jwt
-            account_jwt = os.path.join(d.name, "account.jwt")
+            account_jwt = os.path.join(d, "account.jwt")
             call_command("nsc_account_jwt", "--export", account_jwt, "--name", org.name)
             call_command("nsc_account_jwt", "--import", account_jwt, "--force")
 
             # test user jwt
             org_user = NatsOrganizationUser.objects.get(user=self.user)
 
-            user_jwt = os.path.join(d.name, "user.jwt")
+            user_jwt = os.path.join(d, "user.jwt")
             call_command(
                 "nsc_user_jwt", "--export", user_jwt, "--name", org_user.app_name
             )
