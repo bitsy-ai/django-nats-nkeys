@@ -204,27 +204,11 @@ def nsc_export(dirname: str, force=False) -> subprocess.CompletedProcess:
     cmd = ["nsc", "export", "keys", "--operator", "--dir", dirname]
     if force is True:
         cmd.append("--force")
-    run_nsc_and_log_output(cmd)
-    # credsfile = os.path.join(dirname, "sys.creds")
-    # cmd = [
-    #     "nsc",
-    #     "generate",
-    #     "creds",
-    #     "--account",
-    #     "SYS",
-    #     "--name",
-    #     "sys",
-    #     "--output-file",
-    #     credsfile,
-    # ]
-    # run_nsc_and_log_output(cmd)
+    return run_nsc_and_log_output(cmd)
 
 
 def nsc_import(dirname: str) -> subprocess.CompletedProcess:
     run_nsc_and_log_output(["nsc", "import", "keys", "--dir", dirname])
-    # credsfile = os.path.join(dirname, "sys.creds")
-    # run_nsc_and_log_output(["nsc", "import", "account", "--file", credsfile])
-    # run_nsc_and_log_output(["nsc", "import", "user", "--file", credsfile])
 
 
 def nsc_init_operator(name, outdir, server) -> str:
@@ -332,8 +316,14 @@ def save_describe_json(
 
 
 def nsc_add_app(
-    account_name: str, app_name: str, obj: Union[NatsOrganizationApp, NatsRobotAppModel]
+    account_name: str,
+    app_name: str,
+    obj: Union[NatsOrganizationApp, NatsRobotAppModel],
+    sync: bool = True,
 ) -> Union[NatsOrganizationApp, NatsRobotAppModel]:
+    # if sync is true, pull latest from remote prior to adding app
+    if sync is True:
+        nsc_pull(account=account_name)
     # try create user for account
     try:
         run_nsc_and_log_output(
@@ -380,51 +370,6 @@ def nsc_add_app(
     if cmd != base_cmd:
         run_nsc_and_log_output(cmd)
     return save_describe_json(account_name, obj, app_name=app_name)
-
-
-def create_nats_app(
-    user: User, org: NatsOrganization, nats_app_class=NatsOrganizationApp, **kwargs
-) -> NatsOrganizationApp:
-    """
-    user - an instance of django.contrib.auth.get_user_model()
-    org - an instance of django_nats_nkeys.settings.django_nats_nkeys_settings.get_nats_account_model()
-    nats_app_class - use a model other than
-    ***kwargs - extra kwargs to pass to NatsOrganizationApp.objects.create
-    """
-    # create nats app associated with org user
-    app_name = generate_slug(3)
-    org_user, created = org.get_or_add_user(user)
-    # create user for account
-    run_nsc_and_log_output(
-        [
-            "nsc",
-            "add",
-            "user",
-            "--account",
-            org.name,
-            "--name",
-            app_name,
-            "-K",
-            "service",
-        ]
-    )
-
-    # describe app chain of trust, public signing key fingerprint, public key, claims
-    result = run_nsc_and_log_output(
-        ["nsc", "describe", "user", app_name, "--json"],
-    )
-
-    describe_user = json.loads(result.stdout)
-    # push to remote
-    nsc_push(account_name=org.name)
-    nats_app = nats_app_class.objects.create(
-        app_name=app_name,
-        json=describe_user,
-        organization_user=org_user,
-        organization=org,
-        **kwargs,
-    )
-    return nats_app
 
 
 def nsc_generate_creds(account_name: str, app_name: str) -> str:
