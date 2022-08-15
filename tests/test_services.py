@@ -3,7 +3,6 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 
 from django_nats_nkeys.services import (
-    NatsOrganizationUser,
     nsc_describe_json,
     nsc_validate,
 )
@@ -14,6 +13,7 @@ from django_nats_nkeys.models import (
     NatsOrganizationOwner,
     NatsRobotAccount,
     NatsRobotApp,
+    NatsOrganizationUser,
 )
 from coolname import generate_slug
 

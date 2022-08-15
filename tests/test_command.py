@@ -1,7 +1,12 @@
 import tempfile
+import os
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
+from coolname import generate_slug
+
+from django_nats_nkeys.models import NatsOrganizationUser
+from django_nats_nkeys.services import create_organization
 
 User = get_user_model()
 
@@ -24,11 +29,32 @@ class TestCommand(TestCase):
 
     def test_nsc_operator_jwt(self):
 
-        with tempfile.NamedTemporaryFile() as f:
-            filename = f.name
-        # exit context and delete file. nsc doesn't have an --overwrite flag for nsc describe... command will fail if file exists
-        call_command("nsc_operator_jwt", "--export", f"{f.name}")
-        call_command("nsc_operator_jwt", "--import", f"{f.name}", "--force")
+        with tempfile.TemporaryDirectory() as d:
+            # exit context and delete file. nsc doesn't have an --overwrite flag for nsc describe... command will fail if file exists
+            operator_jwt = os.path.join(d.name, "operator.jwt")
+            call_command("nsc_operator_jwt", "--export", operator_jwt)
+            call_command("nsc_operator_jwt", "--import", operator_jwt, "--force")
+
+            # create NATS account
+            org_name = generate_slug(3)
+            org = create_organization(
+                self.user,
+                org_name,
+                org_user_defaults={"is_admin": True},
+            )
+            # test account jwt
+            account_jwt = os.path.join(d.name, "account.jwt")
+            call_command("nsc_account_jwt", "--export", account_jwt, "--name", org.name)
+            call_command("nsc_account_jwt", "--import", account_jwt, "--force")
+
+            # test user jwt
+            org_user = NatsOrganizationUser.objects.get(user=self.user)
+
+            user_jwt = os.path.join(d.name, "user.jwt")
+            call_command(
+                "nsc_user_jwt", "--export", user_jwt, "--name", org_user.app_name
+            )
+            call_command("nsc_user_jwt", "--import", user_jwt, "--force")
 
     def nsc_validate(self):
         call_command("nsc_valicate")
