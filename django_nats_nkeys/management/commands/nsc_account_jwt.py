@@ -59,6 +59,7 @@ class Command(BaseCommand):
                 "--output-file",
                 exportf,
             ]
+            run_nsc_and_log_output(cmd)
             self.stdout.write(
                 self.style.SUCCESS(f"Success! Output account JWT to {exportf}")
             )

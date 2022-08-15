@@ -43,5 +43,5 @@ class Command(BaseCommand):
                 ["nsc", "describe", "operator", "--raw", "--output-file", exportf]
             )
             self.stdout.write(
-                self.style.SUCCESS(f"Success! Wrote operator JWT to {importf}")
+                self.style.SUCCESS(f"Success! Wrote operator JWT to {exportf}")
             )
