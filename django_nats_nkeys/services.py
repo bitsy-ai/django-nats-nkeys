@@ -219,9 +219,9 @@ def nsc_init_operator(name, outdir, server) -> str:
     # https://docs.nats.io/running-a-nats-service/nats_admin/security/jwt#system-account
 
     # initialize operator
-    run_nsc_and_log_output(["nsc", "add", "operator", "--name", name, "--sys"])
-    # generate a signing key for operator
-    run_nsc_and_log_output(["nsc", "edit", "operator", "--sk", "generate"])
+    run_nsc_and_log_output(
+        ["nsc", "add", "operator", "--name", name, "--sys", "--generate-signing-key"]
+    )
     # add account-jwt-server-url to operator
     run_nsc_and_log_output(
         ["nsc", "edit", "operator", "--account-jwt-server-url", server]
@@ -319,11 +319,7 @@ def nsc_add_app(
     account_name: str,
     app_name: str,
     obj: Union[NatsOrganizationApp, NatsRobotAppModel],
-    sync: bool = True,
 ) -> Union[NatsOrganizationApp, NatsRobotAppModel]:
-    # if sync is true, pull latest from remote prior to adding app
-    if sync is True:
-        nsc_pull(account=account_name)
     # try create user for account
     try:
         run_nsc_and_log_output(
