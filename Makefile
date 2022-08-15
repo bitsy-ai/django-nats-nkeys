@@ -78,9 +78,6 @@ images:
 pytest:
 	docker-compose -f docker/local.yml run --rm django pytest
 
-pytest-ci:
-	docker-compose -f docker/local.yml run --rm django pytest
-
 tox:
 	docker-compose -f docker/local.yml exec django tox
 
@@ -100,11 +97,6 @@ nsc-init:
 	docker-compose -f docker/local.yml exec django python manage.py nsc_init
 	docker-compose -f docker/local.yml restart nats
 	docker-compose -f docker/local.yml exec django python manage.py nsc_push
-
-nsc-init-ci:
-	docker-compose -f docker/local.yml exec -T django python manage.py nsc_init
-	docker-compose -f docker/local.yml restart nats
-	docker-compose -f docker/local.yml exec -T django python manage.py nsc_push
 
 nsc-env:
 	docker-compose -f docker/local.yml exec django python manage.py nsc_env
