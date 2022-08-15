@@ -28,7 +28,6 @@ jobs:
       - name: Run Pytest
         run: |
           make docker-up-d
-          make nsc-init-ci 
           make pytest-ci
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
