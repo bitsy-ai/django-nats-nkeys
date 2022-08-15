@@ -78,9 +78,6 @@ images:
 pytest:
 	docker-compose -f docker/local.yml run --rm django pytest
 
-pytest-ci:
-	docker-compose -f docker/local.yml run --rm django pytest
-
 tox:
 	docker-compose -f docker/local.yml exec django tox
 
