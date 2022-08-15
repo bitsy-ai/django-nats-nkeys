@@ -142,8 +142,32 @@ def nsc_push(account=None, force=False) -> subprocess.CompletedProcess:
     return result
 
 
+class NSCValidator:
+    result: Optional[subprocess.CompletedProcess] = None
+
+    def __init__(self, account_name: Optional[str] = None) -> None:
+        self.account_name = account_name
+
+    def ok(self) -> bool:
+        return self.result.returncode == 0
+
+    def run(self):
+        if self.account_name is None:
+            cmd = ["nsc", "validate", "--all-accounts"]
+        else:
+            cmd = ["nsc", "validate", "--account", self.account_name]
+        result = run_nsc_and_log_output(cmd, check=False)
+        self.result = result
+
+
+def nsc_validate(account_name: Optional[str] = None) -> NSCValidator:
+    validator = NSCValidator(account_name=account_name)
+    validator.run()
+    return validator
+
+
 def run_nsc_and_log_output(
-    cmd: List[str], stdout=True, stderr=True, pull=True, push=True
+    cmd: List[str], stdout=True, stderr=True, check=True
 ) -> subprocess.CompletedProcess:
     if "nsc" not in cmd:
         raise ValueError(
@@ -166,7 +190,9 @@ def run_nsc_and_log_output(
 
     if result.stderr and stderr:
         logger.error(result.stderr)
-    result.check_returncode()
+
+    if check is True:
+        result.check_returncode()
     return result
 
 
@@ -174,27 +200,11 @@ def nsc_export(dirname: str, force=False) -> subprocess.CompletedProcess:
     cmd = ["nsc", "export", "keys", "--operator", "--dir", dirname]
     if force is True:
         cmd.append("--force")
-    run_nsc_and_log_output(cmd)
-    # credsfile = os.path.join(dirname, "sys.creds")
-    # cmd = [
-    #     "nsc",
-    #     "generate",
-    #     "creds",
-    #     "--account",
-    #     "SYS",
-    #     "--name",
-    #     "sys",
-    #     "--output-file",
-    #     credsfile,
-    # ]
-    # run_nsc_and_log_output(cmd)
+    return run_nsc_and_log_output(cmd)
 
 
 def nsc_import(dirname: str) -> subprocess.CompletedProcess:
     run_nsc_and_log_output(["nsc", "import", "keys", "--dir", dirname])
-    # credsfile = os.path.join(dirname, "sys.creds")
-    # run_nsc_and_log_output(["nsc", "import", "account", "--file", credsfile])
-    # run_nsc_and_log_output(["nsc", "import", "user", "--file", credsfile])
 
 
 def nsc_init_operator(name, outdir, server) -> str:
@@ -206,13 +216,11 @@ def nsc_init_operator(name, outdir, server) -> str:
 
     # initialize operator
     run_nsc_and_log_output(
-        ["nsc", "add", "operator", "--name", name, "--sys"], pull=False
+        ["nsc", "add", "operator", "--name", name, "--sys", "--generate-signing-key"]
     )
-    # generate a signing key for operator
-    run_nsc_and_log_output(["nsc", "edit", "operator", "--sk", "generate"], pull=False)
     # add account-jwt-server-url to operator
     run_nsc_and_log_output(
-        ["nsc", "edit", "operator", "--account-jwt-server-url", server], pull=False
+        ["nsc", "edit", "operator", "--account-jwt-server-url", server]
     )
 
     # set operator context and generate config
@@ -226,8 +234,7 @@ def nsc_init_operator(name, outdir, server) -> str:
             "--nats-resolver",
             "--config-file",
             filename,
-        ],
-        pull=False,
+        ]
     )
     return filename
 
@@ -305,7 +312,9 @@ def save_describe_json(
 
 
 def nsc_add_app(
-    account_name: str, app_name: str, obj: Union[NatsOrganizationApp, NatsRobotAppModel]
+    account_name: str,
+    app_name: str,
+    obj: Union[NatsOrganizationApp, NatsRobotAppModel],
 ) -> Union[NatsOrganizationApp, NatsRobotAppModel]:
     # try create user for account
     try:
@@ -353,51 +362,6 @@ def nsc_add_app(
     if cmd != base_cmd:
         run_nsc_and_log_output(cmd)
     return save_describe_json(account_name, obj, app_name=app_name)
-
-
-def create_nats_app(
-    user: User, org: NatsOrganization, nats_app_class=NatsOrganizationApp, **kwargs
-) -> NatsOrganizationApp:
-    """
-    user - an instance of django.contrib.auth.get_user_model()
-    org - an instance of django_nats_nkeys.settings.django_nats_nkeys_settings.get_nats_account_model()
-    nats_app_class - use a model other than
-    ***kwargs - extra kwargs to pass to NatsOrganizationApp.objects.create
-    """
-    # create nats app associated with org user
-    app_name = generate_slug(3)
-    org_user, created = org.get_or_add_user(user)
-    # create user for account
-    run_nsc_and_log_output(
-        [
-            "nsc",
-            "add",
-            "user",
-            "--account",
-            org.name,
-            "--name",
-            app_name,
-            "-K",
-            "service",
-        ]
-    )
-
-    # describe app chain of trust, public signing key fingerprint, public key, claims
-    result = run_nsc_and_log_output(
-        ["nsc", "describe", "user", app_name, "--json"],
-    )
-
-    describe_user = json.loads(result.stdout)
-    # push to remote
-    nsc_push(account_name=org.name)
-    nats_app = nats_app_class.objects.create(
-        app_name=app_name,
-        json=describe_user,
-        organization_user=org_user,
-        organization=org,
-        **kwargs,
-    )
-    return nats_app
 
 
 def nsc_generate_creds(account_name: str, app_name: str) -> str:

@@ -6,38 +6,62 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_nats_nkeys', '0004_auto_20220813_2050'),
+        ("django_nats_nkeys", "0004_auto_20220813_2050"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='allow_pub',
-            field=models.CharField(help_text='add publish permissions, comma separated list. equivalent to `nsc add user ... --allow-pub=<permissions>`', max_length=255, null=True),
+            model_name="natsorganizationuser",
+            name="allow_pub",
+            field=models.CharField(
+                help_text="add publish permissions, comma separated list. equivalent to `nsc add user ... --allow-pub=<permissions>`",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='allow_pubsub',
-            field=models.CharField(help_text='add publish/subscribe permissions, comma separated list. equivalent to `nsc add user ... --allow-pubsub=<permissions>`', max_length=255, null=True),
+            model_name="natsorganizationuser",
+            name="allow_pubsub",
+            field=models.CharField(
+                help_text="add publish/subscribe permissions, comma separated list. equivalent to `nsc add user ... --allow-pubsub=<permissions>`",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='allow_sub',
-            field=models.CharField(help_text='add subscribe permissions, comma separated list. equivalent to `nsc add user ... --allow-sub=<permissions>`', max_length=255, null=True),
+            model_name="natsorganizationuser",
+            name="allow_sub",
+            field=models.CharField(
+                help_text="add subscribe permissions, comma separated list. equivalent to `nsc add user ... --allow-sub=<permissions>`",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='deny_pub',
-            field=models.CharField(help_text='deny publish permissions, comma separated list. equivalent to `nsc add user ... --deny-pub=<permissions>`', max_length=255, null=True),
+            model_name="natsorganizationuser",
+            name="deny_pub",
+            field=models.CharField(
+                help_text="deny publish permissions, comma separated list. equivalent to `nsc add user ... --deny-pub=<permissions>`",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='deny_pubsub',
-            field=models.CharField(help_text='deny publish/subscribe permissions, comma separated list. equivalent to `nsc add user ... --deny-pubsub=<permissions>`', max_length=255, null=True),
+            model_name="natsorganizationuser",
+            name="deny_pubsub",
+            field=models.CharField(
+                help_text="deny publish/subscribe permissions, comma separated list. equivalent to `nsc add user ... --deny-pubsub=<permissions>`",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='deny_sub',
-            field=models.CharField(help_text='deny subscribe permissions, comma separated list. equivalent to `nsc add user ... --deny-sub=<permissions>`', max_length=255, null=True),
+            model_name="natsorganizationuser",
+            name="deny_sub",
+            field=models.CharField(
+                help_text="deny subscribe permissions, comma separated list. equivalent to `nsc add user ... --deny-sub=<permissions>`",
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

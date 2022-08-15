@@ -1,7 +1,12 @@
+from wsgiref.validate import validator
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from django_nats_nkeys.services import NatsOrganizationUser, nsc_describe_json
+from django_nats_nkeys.services import (
+    NatsOrganizationUser,
+    nsc_describe_json,
+    nsc_validate,
+)
 from django_nats_nkeys.models import (
     NatsMessageExport,
     NatsMessageExportType,
@@ -72,6 +77,10 @@ class TestServices(TestCase):
         )
         assert org_user.json == user_json
 
+        # assert nsc validation is ok
+        assert org.nsc_validate().ok() is True
+        assert org_user.nsc_validate().ok() is True
+
     def test_create_org_app(self):
         org_user = self.org_user
         app = self.app
@@ -82,6 +91,9 @@ class TestServices(TestCase):
         assert app.json == nsc_describe_json(
             app.organization.name, app_name=app.app_name
         )
+
+        # assert nsc validation is ok
+        assert app.nsc_validate().ok() is True
 
     def test_nsc_generate_creds(self):
         app_creds = nsc_generate_creds(self.app.organization.name, self.app.app_name)
@@ -114,11 +126,16 @@ class TestServices(TestCase):
         # assert robot account json matches nsc describe output
         assert self.robot_account.json == nsc_describe_json(self.robot_account.name)
 
+        # assert nsc validation is ok
+        assert self.robot_account.nsc_validate().ok() is True
+
     def test_create_robot_app(self):
         assert self.robot_app.app_name == self.robot_app_name
         assert self.robot_app.json == nsc_describe_json(
             self.robot_app.account.name, app_name=self.robot_app.app_name
         )
+
+        assert self.robot_app.nsc_validate().ok() is True
 
     def test_imports_and_exports_stream(self):
         export_name = "all-public"
@@ -183,3 +200,9 @@ class TestServices(TestCase):
             == subject_pattern
             == self.org.json["nats"]["exports"][0]["subject"]
         )
+
+    def test_validator(self):
+        validator = nsc_validate(account_name=self.org_name)
+        assert validator.ok() is True
+        validator = nsc_validate(account_name=self.robot_account.name)
+        assert validator.ok() is True

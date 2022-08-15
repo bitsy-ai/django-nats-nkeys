@@ -66,6 +66,11 @@ class NatsOrganization(AbstractOrganization):
         NatsMessageExport, related_name="nats_organization_exports"
     )
 
+    def nsc_validate(self):
+        from .services import nsc_validate
+
+        return nsc_validate(account_name=self.name)
+
 
 class AbstractNatsApp(models.Model):
     """
@@ -132,6 +137,11 @@ class NatsOrganizationUser(AbstractOrganizationUser, AbstractNatsApp):
 
     objects = NatsOrganizationAppManager()
 
+    def nsc_validate(self):
+        from .services import nsc_validate
+
+        return nsc_validate(account_name=self.organization.name)
+
 
 class NatsOrganizationApp(AbstractNatsApp):
     """
@@ -157,6 +167,11 @@ class NatsOrganizationApp(AbstractNatsApp):
         on_delete=models.CASCADE,
         related_name="nats_apps",
     )
+
+    def nsc_validate(self):
+        from .services import nsc_validate
+
+        return nsc_validate(account_name=self.organization.name)
 
 
 class NatsOrganizationOwner(AbstractOrganizationOwner):
@@ -202,6 +217,11 @@ class AbstractNatsRobotAccount(models.Model):
         NatsMessageExport, related_name="nats_robot_exports"
     )
 
+    def nsc_validate(self):
+        from .services import nsc_validate
+
+        return nsc_validate(account_name=self.name)
+
 
 class NatsRobotAccount(AbstractNatsRobotAccount):
     pass
@@ -222,3 +242,8 @@ class NatsRobotApp(AbstractNatsApp):
         related_name="robot_apps",
         on_delete=models.CASCADE,
     )
+
+    def nsc_validate(self):
+        from .services import nsc_validate
+
+        return nsc_validate(account_name=self.account.name)
