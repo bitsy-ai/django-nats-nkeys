@@ -17,7 +17,7 @@ RUN apt-get update \
 
 # install nsc command-line tool
 RUN curl -L https://raw.githubusercontent.com/nats-io/nsc/8f690c29910575597b8a3954154be4ee9e79519a/install.py | python
-
+RUN cp /root/.nsccli/bin/nsc /usr/local/bin/nsc
 
 RUN mkdir /workspace
 WORKDIR /workspace
