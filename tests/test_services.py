@@ -93,7 +93,7 @@ class TestServices(TestCase):
         )
 
         # assert nsc validation is ok
-        assert app.nsc_valiate().ok() is True
+        assert app.nsc_validate().ok() is True
 
     def test_nsc_generate_creds(self):
         app_creds = nsc_generate_creds(self.app.organization.name, self.app.app_name)
