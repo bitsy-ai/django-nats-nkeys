@@ -12,7 +12,6 @@ class Command(BaseCommand):
             "--import",
             type=str,
             help="Import user from .jwt",
-            required=True,
         )
         parser.add_argument(
             "--export",
@@ -42,7 +41,7 @@ class Command(BaseCommand):
         if importf is not None:
             cmd = ["nsc", "import", "user", "--file", importf]
             if force is True:
-                cmd += ["--force"]
+                cmd += ["--overwrite"]
             run_nsc_and_log_output(cmd)
             self.stdout.write(
                 self.style.SUCCESS(f"Success! Imported from JWT {importf}")

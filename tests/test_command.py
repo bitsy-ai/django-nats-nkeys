@@ -44,9 +44,6 @@ class TestCommand(TestCase):
             # test account jwt
             account_jwt = os.path.join(d, "account.jwt")
             call_command("nsc_account_jwt", "--export", account_jwt, "--name", org.name)
-            import pdb
-
-            pdb.set_trace()
             call_command("nsc_account_jwt", "--import", account_jwt, "--force")
 
             # test user jwt

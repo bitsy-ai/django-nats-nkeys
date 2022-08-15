@@ -42,7 +42,7 @@ class Command(BaseCommand):
         if importf is not None:
             cmd = ["nsc", "import", "account", "--file", importf]
             if force is True:
-                cmd += ["--force"]
+                cmd += ["--overwrite"]
             run_nsc_and_log_output(cmd)
             self.stdout.write(
                 self.style.SUCCESS(f"Success! Imported from JWT {importf}")
