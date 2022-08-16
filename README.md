@@ -13,7 +13,10 @@ The NATS `nsc` tool is used to manage operator, account, and user JWTs.
 Quick start
 ===========
 
-1.  Add to your INSTALLED\_APPS settings:
+
+1. `pip install django-nats-nkeys[drf]` 
+
+2.  Add to your INSTALLED\_APPS settings:
 
         INSTALLED_APPS = [
             ...
@@ -22,10 +25,10 @@ Quick start
             "django_nats_nkey",
         ]
 
-2.  Run `python manage.py migrate` to create the NATS organizationals
+3.  Run `python manage.py migrate` to create the NATS organizationals
     models
 
-3.  Run `python manage.py nsc-init` (optional) Initialize a new NATS
+4.  Run `python manage.py nsc-init` (optional) Initialize a new NATS
     operator. You are responsible for copying the generated
     `.conf` file to your NATS server. If you choose to use
     an existing operator, you are responsible for running `nsc pull` as a pre-deployment step.
@@ -82,5 +85,10 @@ Settings
 ### Robot/Automation Models
 
 `NATS_ROBOT_APP_MODEL` (default: `"django_nats_nkeys.NatsRobotApp"`)
+
 `NATS_ROBOT_ACCOUNT_MODEL` (default: `"django_nats_nkeys.NatsRobotAccount"`)
 
+
+### App Models
+
+`NATS_APP_MODELS` (default: `[ "django_nats_nkey.NatsOrganizationApp" , "django_nats_nkeys.NatsRobotApp" ]`)
