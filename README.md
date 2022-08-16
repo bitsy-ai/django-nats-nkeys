@@ -57,7 +57,7 @@ Settings
 `NATS_NSC_DATA_DIR` (default: `"/var/lib/nats/nsc/stores"` or `$NSC_STORE` environment var)
 `NATS_NSC_CONFIG_DIR`(default: `"/var/lib/nats/nsc/config"` or `$NSC_HOME` environment var)
 `NATS_NSC_KEYSTORE_DIR` (default: `"/var/lib/nats/nsc/keys"` or `$NKEYS_PATH` environment var)
-`NATS_SERVER_URI` (default: `"nats://nats:4223"`)
+`NATS_SERVER_URI` (default: `"nats://nats:4222"`)
 `NATS_NKEYS_IMPORT_DIR` (default: `".nats/"`, )
 `NATS_NKEYS_EXPORT_DIR` (default: `".nats/"`)
 `NATS_NKEYS_OPERATOR_NAME` (default: `"DjangoOperator"`)

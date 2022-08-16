@@ -236,6 +236,14 @@ class NatsRobotAppManager(models.Manager):
 
 
 class NatsRobotApp(AbstractNatsApp):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["app_name", "account"],
+                name="unique_app_name_per_robot_account",
+            )
+        ]
+
     objects = NatsRobotAppManager()
     account = models.ForeignKey(
         NatsRobotAccount,
