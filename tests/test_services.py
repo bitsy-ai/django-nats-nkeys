@@ -1,7 +1,7 @@
-from wsgiref.validate import validator
+import pytest
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-
+from django.db import IntegrityError
 from django_nats_nkeys.services import (
     nsc_describe_json,
     nsc_validate,
@@ -206,3 +206,19 @@ class TestServices(TestCase):
         assert validator.ok() is True
         validator = nsc_validate(account_name=self.robot_account.name)
         assert validator.ok() is True
+
+    def test_unique_robot(self):
+        # unique account name required
+        with pytest.raises(IntegrityError):
+            NatsRobotAccount.objects.create_nsc(name=self.robot_name)
+        # unique-per-account app name required
+        with pytest.raises(IntegrityError):
+            NatsRobotApp.objects.create_nsc(
+                app_name=self.robot_app_name, account=self.robot_account
+            )
+        new_app_name = generate_slug(3)
+        # doesn't raise exception
+        app = NatsRobotApp.objects.create_nsc(
+            app_name=new_app_name, account=self.robot_account
+        )
+        assert app.app_name == new_app_name
