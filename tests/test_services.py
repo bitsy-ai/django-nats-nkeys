@@ -224,7 +224,6 @@ class TestPublicStreamExport(TestCase):
             "name": export_name,
             "subject": subject_pattern,
             "type": "stream",
-            "token_req": True,
         }
 
         # imports account id matches
@@ -320,6 +319,7 @@ class TestPrivateStreamExport(TestCase):
             "name": export_name,
             "subject": subject_pattern,
             "type": "stream",
+            "token_req": True,
         }
 
         # imports account id matches
