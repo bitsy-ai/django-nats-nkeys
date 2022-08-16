@@ -4,7 +4,6 @@ dj-stripe Migrations Tests
 import pytest
 from django.test import TestCase, override_settings
 from django.core.exceptions import ImproperlyConfigured
-
 from django_nats_nkeys.settings import nats_nkeys_settings
 
 
@@ -72,6 +71,7 @@ class TestSettings(TestCase):
             NatsOrganizationUser,
             NatsOrganizationOwner,
             NatsOrganizationApp,
+            NatsRobotApp,
         )
 
         assert nats_nkeys_settings.get_nats_user_model() is NatsOrganizationUser
@@ -83,3 +83,8 @@ class TestSettings(TestCase):
         assert (
             nats_nkeys_settings.get_nats_organization_app_model() is NatsOrganizationApp
         )
+
+        assert nats_nkeys_settings.get_nats_app_models() == [
+            NatsOrganizationApp,
+            NatsRobotApp,
+        ]

@@ -1,4 +1,5 @@
 import os
+from typing import List
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -228,6 +229,35 @@ class DjangoNatsNkeySettings:
                 "NATS_ORGANIZATION_USER_MODEL must subclass or proxy django_nats_nkeys.models.NatsOrganizationUser"
             )
         return nats_user_model
+
+    def get_nats_app_models_string(self) -> str:
+        pass
+
+    def get_nats_app_models(self) -> List[Model]:
+        model_strings = getattr(
+            settings,
+            "NATS_APP_MODELS",
+            [
+                self.get_nats_organization_app_model_string(),
+                self.get_nats_robot_app_model_string(),
+            ],
+        )
+        app_models: List[Model] = []
+
+        for model_name in model_strings:
+            try:
+                model = django_apps.get_model(model_name)
+                app_models.append(model)
+            except ValueError:
+                raise ImproperlyConfigured(
+                    "NATS_APP_MODELS must be a list of models in the format: 'app_label.model_name'."
+                )
+            except LookupError:
+                raise ImproperlyConfigured(
+                    "NATS_APP_MODELS refers to model '{model}' "
+                    "that has not been installed.".format(model=model_name)
+                )
+        return app_models
 
 
 nats_nkeys_settings = DjangoNatsNkeySettings()
