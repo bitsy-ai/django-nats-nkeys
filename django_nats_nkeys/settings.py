@@ -247,7 +247,7 @@ class DjangoNatsNkeySettings:
         for model_name in model_strings:
             try:
                 model = django_apps.get_model(model_name)
-                app_models.push(model)
+                app_models.append(model)
             except ValueError:
                 raise ImproperlyConfigured(
                     "NATS_APP_MODELS must be a list of models in the format: 'app_label.model_name'."
