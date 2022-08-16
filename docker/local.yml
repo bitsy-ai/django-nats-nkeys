@@ -18,7 +18,7 @@ services:
     volumes:
       - ../:/workspace:z
     ports:
-      - "8000:8000"
+      - "8801:8000"
     env_file:
       - test.env
     environment:
@@ -36,7 +36,7 @@ services:
     env_file:
       - test.env
     ports:
-      - "5432:5432"
+      - "5433:5432"
   nats:
     hostname: nats
     container_name: django_nats_nkeys_nats
@@ -51,4 +51,4 @@ services:
       - --name
       - localnats
     ports:
-      - "4223:4223"
+      - "4223:4222"

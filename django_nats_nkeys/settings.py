@@ -44,7 +44,7 @@ class DjangoNatsNkeySettings:
 
     @property
     def NATS_SERVER_URI(self) -> str:
-        return getattr(settings, "NATS_SERVER_URI", "nats://nats:4223")
+        return getattr(settings, "NATS_SERVER_URI", "nats://nats:4222")
 
     @property
     def NATS_NKEYS_OPERATOR_NAME(self) -> str:
