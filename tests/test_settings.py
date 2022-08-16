@@ -43,7 +43,7 @@ class TestSettings(TestCase):
     @override_settings(NATS_ORGANIZATION_OWNER_MODEL="invalid")
     def test_invalid_account_owner_model(self):
         with pytest.raises(ImproperlyConfigured):
-            nats_nkeys_settings.get_NATS_ORGANIZATION_OWNER_MODEL()
+            nats_nkeys_settings.get_nats_organization_owner_model()
 
     @override_settings(NATS_ORGANIZATION_APP_MODEL="invalid")
     def test_invalid_app_model(self):
@@ -77,7 +77,7 @@ class TestSettings(TestCase):
         assert nats_nkeys_settings.get_nats_user_model() is NatsOrganizationUser
         assert nats_nkeys_settings.get_nats_account_model() is NatsOrganization
         assert (
-            nats_nkeys_settings.get_NATS_ORGANIZATION_OWNER_MODEL()
+            nats_nkeys_settings.get_nats_organization_owner_model()
             is NatsOrganizationOwner
         )
         assert (
