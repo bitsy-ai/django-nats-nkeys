@@ -9,12 +9,14 @@ long_description: str = open(
     os.path.join(os.path.dirname(__file__), "README.md")
 ).read()
 install_requires = [
-    "coolname>=1.1.0",
+    "coolname~=1.1.0",
     "django>=3.2,<4",
     "psycopg2",
-    "django-extensions>=3.2.0",
-    "django-organizations>=2.0.2",
+    "django-extensions~=3.2.0",
+    "django-organizations~=2.0.2",
 ]
+
+extras = {"drf": ["djangorestframework~=3.13.1"]}
 python_requires = ">3.6.9"
 setup(
     name="django_nats_nkeys",
@@ -40,4 +42,5 @@ setup(
     test_suite="pytest",
     python_requires=python_requires,
     include_package_data=True,
+    extras_require=extras,
 )
