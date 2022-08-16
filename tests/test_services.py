@@ -207,18 +207,14 @@ class TestServices(TestCase):
         validator = nsc_validate(account_name=self.robot_account.name)
         assert validator.ok() is True
 
-    def test_unique_robot(self):
+    def test_unique_robot_account(self):
         # unique account name required
         with pytest.raises(IntegrityError):
             NatsRobotAccount.objects.create_nsc(name=self.robot_name)
         # unique-per-account app name required
+
+    def test_unique_robot_app(self):
         with pytest.raises(IntegrityError):
             NatsRobotApp.objects.create_nsc(
                 app_name=self.robot_app_name, account=self.robot_account
             )
-        new_app_name = generate_slug(3)
-        # doesn't raise exception
-        app = NatsRobotApp.objects.create_nsc(
-            app_name=new_app_name, account=self.robot_account
-        )
-        assert app.app_name == new_app_name
