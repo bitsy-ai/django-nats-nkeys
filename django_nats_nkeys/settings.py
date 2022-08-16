@@ -113,7 +113,7 @@ class DjangoNatsNkeySettings:
             "django_nats_nkeys.NatsOrganizationOwner",
         )
 
-    def get_NATS_ORGANIZATION_OWNER_MODEL(self) -> Model:
+    def get_nats_organization_owner_model(self) -> Model:
         model_name = self.get_nats_organization_owner_model_string()
         try:
             nats_app_model = django_apps.get_model(model_name)

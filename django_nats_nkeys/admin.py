@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from django_nats_nkeys.settings import nats_nkeys_settings
+from django_nats_nkeys.models import NatsMessageExport, NatsRobotAccount
 
 from organizations.models import (
     Organization,
@@ -10,17 +11,18 @@ from organizations.models import (
 )
 
 NatsOrganization = nats_nkeys_settings.get_nats_account_model()
-NatsOrganizationOwner = nats_nkeys_settings.get_NATS_ORGANIZATION_OWNER_MODEL()
-NatsApp = nats_nkeys_settings.get_nats_organization_app_model()
+NatsOrganizationOwner = nats_nkeys_settings.get_nats_organization_owner_model()
 NatsOrganizationUser = nats_nkeys_settings.get_nats_user_model()
+NatsAppModels = nats_nkeys_settings.get_nats_app_models()
+NatsRobotAccount = nats_nkeys_settings.get_nats_robot_account_model()
 
 
-@admin.register(NatsOrganization)
-class NatsOrganizationAdmin(admin.ModelAdmin):
+@admin.register(NatsMessageExport)
+class NatsNatsMessageExportAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(NatsApp)
+@admin.register(NatsOrganization)
 class NatsOrganizationAdmin(admin.ModelAdmin):
     pass
 
@@ -31,12 +33,17 @@ class NatsOrganizationOwnerAdmin(admin.ModelAdmin):
 
 
 @admin.register(NatsOrganizationUser)
-class NatsAccountOwnerAdmin(admin.ModelAdmin):
+class NatsOrganizationUserAdmin(admin.ModelAdmin):
     pass
 
 
-# unregister django organization defaults and register our own
-admin.site.unregister(Organization)
-admin.site.unregister(OrganizationUser)
-admin.site.unregister(OrganizationOwner)
-admin.site.unregister(OrganizationInvitation)
+@admin.register(NatsRobotAccount)
+class NatsRobotAccountAdmin(admin.ModelAdmin):
+    pass
+
+
+for model in NatsAppModels:
+
+    @admin.register(model)
+    class NatsAppModelAdmin(admin.ModelAdmin):
+        pass
