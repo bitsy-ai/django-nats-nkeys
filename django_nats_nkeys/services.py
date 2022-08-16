@@ -1,4 +1,5 @@
 import subprocess
+import tempfile
 from typing import List, Optional, Union, Tuple, Dict, Any
 import logging
 import json
@@ -411,15 +412,21 @@ def nsc_add_import(
         result = run_nsc_and_log_output(cmd, stdout=False, stderr=False)
         activation_token = result.stdout
 
-        # now, import the stream using the activation token
-        # again, do not log sensitive token stdout/stderr loggers
-        cmd = [
-            "nsc",
-            "add",
-            "import",
-            "--account",
-            dest_account_name,
-            "--token",
-            activation_token,
-        ]
-        run_nsc_and_log_output(cmd, stdout=False, stderr=False)
+        # write activation token to NamedTemporaryFile
+        with tempfile.NamedTemporaryFile("w+") as f:
+            f.write(activation_token)
+            f.flush()
+
+            # now, import the stream using the activation token
+            # tempfile will automatically be deleted afterwards
+            # again, do not log sensitive token stdout/stderr loggers
+            cmd = [
+                "nsc",
+                "add",
+                "import",
+                "--account",
+                dest_account_name,
+                "--token",
+                f.name,
+            ]
+            run_nsc_and_log_output(cmd, stdout=False, stderr=False)

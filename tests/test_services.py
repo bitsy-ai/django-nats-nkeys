@@ -137,7 +137,57 @@ class TestServices(TestCase):
 
         assert self.robot_app.nsc_validate().ok() is True
 
-    def test_imports_and_exports_stream(self):
+    def test_validator(self):
+        validator = nsc_validate(account_name=self.org_name)
+        assert validator.ok() is True
+        validator = nsc_validate(account_name=self.robot_account.name)
+        assert validator.ok() is True
+
+    def test_unique_robot_account(self):
+        # unique account name required
+        with pytest.raises(IntegrityError):
+            NatsRobotAccount.objects.create_nsc(name=self.robot_name)
+        # unique-per-account app name required
+
+    def test_unique_robot_app(self):
+        with pytest.raises(IntegrityError):
+            NatsRobotApp.objects.create_nsc(
+                app_name=self.robot_app_name, account=self.robot_account
+            )
+
+
+class TestPublicStreamExport(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create(
+            email="admin@test.com", password="testing1234", is_superuser=False
+        )
+        cls.org_name = generate_slug(3)
+        cls.org = create_organization(
+            cls.user,
+            cls.org_name,
+            org_user_defaults={"is_admin": True},
+        )
+
+        cls.org_user = NatsOrganizationUser.objects.get(user=cls.user)
+        cls.org_owner = NatsOrganizationOwner.objects.get(organization=cls.org)
+
+        cls.app_name = generate_slug(3)
+
+        cls.app = NatsOrganizationApp.objects.create_nsc(
+            app_name=cls.app_name,
+            organization_user=cls.org_user,
+            organization=cls.org_user.organization,
+        )
+        cls.robot_name = generate_slug(3)
+        cls.robot_account = NatsRobotAccount.objects.create_nsc(name=cls.robot_name)
+        cls.robot_app_name = generate_slug(3)
+        cls.robot_app = NatsRobotApp.objects.create_nsc(
+            app_name=cls.robot_app_name, account=cls.robot_account
+        )
+
+    def test_imports_and_exports_public_stream(self):
         export_name = "all-public"
         subject_pattern = "public.>"
         public_msg_stream = NatsMessageExport.objects.create(
@@ -201,20 +251,98 @@ class TestServices(TestCase):
             == self.org.json["nats"]["exports"][0]["subject"]
         )
 
-    def test_validator(self):
-        validator = nsc_validate(account_name=self.org_name)
-        assert validator.ok() is True
-        validator = nsc_validate(account_name=self.robot_account.name)
-        assert validator.ok() is True
 
-    def test_unique_robot_account(self):
-        # unique account name required
-        with pytest.raises(IntegrityError):
-            NatsRobotAccount.objects.create_nsc(name=self.robot_name)
-        # unique-per-account app name required
+class TestPrivateStreamExport(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create(
+            email="admin@test.com", password="testing1234", is_superuser=False
+        )
+        cls.org_name = generate_slug(3)
+        cls.org = create_organization(
+            cls.user,
+            cls.org_name,
+            org_user_defaults={"is_admin": True},
+        )
 
-    def test_unique_robot_app(self):
-        with pytest.raises(IntegrityError):
-            NatsRobotApp.objects.create_nsc(
-                app_name=self.robot_app_name, account=self.robot_account
-            )
+        cls.org_user = NatsOrganizationUser.objects.get(user=cls.user)
+        cls.org_owner = NatsOrganizationOwner.objects.get(organization=cls.org)
+
+        cls.app_name = generate_slug(3)
+
+        cls.app = NatsOrganizationApp.objects.create_nsc(
+            app_name=cls.app_name,
+            organization_user=cls.org_user,
+            organization=cls.org_user.organization,
+        )
+        cls.robot_name = generate_slug(3)
+        cls.robot_account = NatsRobotAccount.objects.create_nsc(name=cls.robot_name)
+        cls.robot_app_name = generate_slug(3)
+        cls.robot_app = NatsRobotApp.objects.create_nsc(
+            app_name=cls.robot_app_name, account=cls.robot_account
+        )
+
+    def test_imports_and_exports_private_stream(self):
+        export_name = "private"
+        subject_pattern = "private.>"
+        private_msg_stream = NatsMessageExport.objects.create(
+            name=export_name,
+            subject_pattern=subject_pattern,
+            public=False,
+            export_type=NatsMessageExportType.STREAM,
+        )
+
+        # add a robot importer
+        self.robot_account.imports.add(private_msg_stream)
+
+        # add another org account importer
+        partner_user = User.objects.create(
+            email="private-partner@test.com",
+            password="testing1234",
+            is_superuser=False,
+            username="private-partner",
+        )
+        partner_org_name = generate_slug(3)
+        partner_org = create_organization(
+            partner_user,
+            partner_org_name,
+            org_user_defaults={"is_admin": True},
+        )
+        partner_org.imports.add(private_msg_stream)
+
+        # add export to NatsOrganization
+        self.org.exports.add(private_msg_stream)
+        assert self.org.exports.count() == 1
+        # nsc describe output should contain stream
+        assert self.org.json["nats"]["exports"][0] == {
+            "name": export_name,
+            "subject": subject_pattern,
+            "type": "stream",
+            "token_req": True,
+        }
+
+        # imports account id matches
+        partner_org.refresh_from_db()
+        self.robot_account.refresh_from_db()
+        self.org.refresh_from_db()
+
+        assert partner_org.json["nats"]["imports"][0]["account"] == self.org.json["sub"]
+        assert (
+            self.robot_account.json["nats"]["imports"][0]["account"]
+            == self.org.json["sub"]
+        )
+
+        # subjects match
+        # TODO: this will break for remote subject remapping
+        assert (
+            partner_org.json["nats"]["imports"][0]["subject"]
+            == subject_pattern
+            == self.org.json["nats"]["exports"][0]["subject"]
+        )
+
+        assert (
+            self.robot_account.json["nats"]["imports"][0]["subject"]
+            == subject_pattern
+            == self.org.json["nats"]["exports"][0]["subject"]
+        )
