@@ -15,8 +15,8 @@ def add_nats_organization_export(sender, instance, model, action, pk_set, **kwar
     instance - NatsOrganization
     model - NatsMessageExport
     """
-
-    if action == "post_add":
+    # if relationship.add() is called and through model row already exists, pk_set will be empty - skip
+    if action == "post_add" and len(pk_set) == 1:
         # nsc add export for NatsOrganization account
         msg_export_id = pk_set.pop()
         msg_export = model.objects.get(id=msg_export_id)

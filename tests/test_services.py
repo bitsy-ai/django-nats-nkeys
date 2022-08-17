@@ -156,6 +156,99 @@ class TestServices(TestCase):
             )
 
 
+class TestIdempotentAdd(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create(
+            email="admin@test.com", password="testing1234", is_superuser=False
+        )
+        cls.org_name = generate_slug(3)
+        cls.org = create_organization(
+            cls.user,
+            cls.org_name,
+            org_user_defaults={"is_admin": True},
+        )
+
+        cls.org_user = NatsOrganizationUser.objects.get(user=cls.user)
+        cls.org_owner = NatsOrganizationOwner.objects.get(organization=cls.org)
+
+        cls.app_name = generate_slug(3)
+
+        cls.app = NatsOrganizationApp.objects.create_nsc(
+            app_name=cls.app_name,
+            organization_user=cls.org_user,
+            organization=cls.org_user.organization,
+        )
+        cls.robot_name = generate_slug(3)
+        cls.robot_account = NatsRobotAccount.objects.create_nsc(name=cls.robot_name)
+        cls.robot_app_name = generate_slug(3)
+        cls.robot_app = NatsRobotApp.objects.create_nsc(
+            app_name=cls.robot_app_name, account=cls.robot_account
+        )
+
+    def test_idempotent_add(self):
+        # adding a relationship that already exists should be a no-op
+        public_export_name = "all-public"
+        public_subject_pattern = "public.>"
+        public_msg_stream = NatsMessageExport.objects.create(
+            name=public_export_name,
+            subject_pattern=public_subject_pattern,
+            public=True,
+            export_type=NatsMessageExportType.STREAM,
+        )
+
+        private_export_name = "private"
+        private_subject_pattern = "private.>"
+        private_msg_stream = NatsMessageExport.objects.create(
+            name=private_export_name,
+            subject_pattern=private_subject_pattern,
+            public=False,
+            export_type=NatsMessageExportType.STREAM,
+        )
+
+        # add another org account importer
+        partner_user = User.objects.create(
+            email="private-partner@test.com",
+            password="testing1234",
+            is_superuser=False,
+            username="private-partner",
+        )
+        partner_org_name = generate_slug(3)
+        partner_org = create_organization(
+            partner_user,
+            partner_org_name,
+            org_user_defaults={"is_admin": True},
+        )
+
+        partner_org.imports.add(public_msg_stream)
+        partner_org.imports.add(private_msg_stream)
+
+        expected_partner_json = partner_org.json.copy()
+
+        self.robot_account.imports.add(public_msg_stream)
+        self.robot_account.imports.add(private_msg_stream)
+
+        expected_robot_json = self.robot_account.json.copy()
+
+        # should not raise any exceptions / should be a no-op
+        partner_org.imports.add(private_msg_stream)
+        self.robot_account.imports.add(private_msg_stream)
+        self.robot_account.imports.add(public_msg_stream)
+
+        assert expected_partner_json == partner_org.json
+        assert expected_robot_json == self.robot_account.json
+
+        self.org.exports.add(private_msg_stream)
+        self.org.exports.add(public_msg_stream)
+
+        expected_org_json = self.org.json.copy()
+
+        # should raise any exceptions / should be a no-op
+        self.org.exports.add(private_msg_stream)
+        assert expected_org_json == self.org.json
+
+
 class TestPublicStreamExport(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
