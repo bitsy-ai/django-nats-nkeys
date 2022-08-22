@@ -2,10 +2,6 @@ import pytest
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django_nats_nkeys.services import (
-    nsc_describe_json,
-    nsc_validate,
-)
 from django_nats_nkeys.models import (
     NatsMessageExport,
     NatsMessageExportType,
@@ -21,6 +17,7 @@ from django_nats_nkeys.services import (
     create_organization,
     nsc_describe_json,
     nsc_generate_creds,
+    nsc_validate,
 )
 
 User = get_user_model()

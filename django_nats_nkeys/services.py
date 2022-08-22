@@ -6,7 +6,12 @@ import json
 import os
 from organizations.utils import model_field_names
 from django.contrib.auth import get_user_model
-from django_nats_nkeys.settings import nats_nkeys_settings
+from django_nats_nkeys.errors import (
+    NscConflict,
+    NscError,
+    NscStreamExportConflict,
+)
+from django_nats_nkeys.settings import NatsNscRetryMode, nats_nkeys_settings
 from coolname import generate_slug
 
 logger = logging.getLogger(__name__)
@@ -64,23 +69,14 @@ def nsc_add_account(
     obj: Union[NatsOrganization, NatsRobotAccountModel]
 ) -> Union[NatsOrganization, NatsRobotAccountModel]:
     # try create nsc account
-    try:
-        # add account
-        run_nsc_and_log_output(["nsc", "add", "account", "--name", obj.name])
-        # generate a signing key for account
-        run_nsc_and_log_output(
-            ["nsc", "edit", "account", "--name", obj.name, "--sk", "generate"]
-        )
-        # push local changes to remote NATs resolver
-        nsc_push(account=obj.name)
+    run_nsc_and_log_output(["nsc", "add", "account", "--name", obj.name])
+    # generate a signing key for account
+    run_nsc_and_log_output(
+        ["nsc", "edit", "account", "--name", obj.name, "--sk", "generate"]
+    )
+    # push local changes to remote NATs resolver
+    nsc_push(account=obj.name)
 
-    except subprocess.CalledProcessError as e:
-        # nsc add account command returned "Error: the account "<name>" already exists"
-        # we can proceed to saving output of `nsc describe account <name> --json``
-        if "already exists" in e.stderr:
-            pass
-        # re-raise other errors
-        raise e
     # describe the account and update objanization's json represetnation
     save_describe_json(obj.name, obj)
     return obj
@@ -193,7 +189,38 @@ def run_nsc_and_log_output(
         logger.error(result.stderr)
 
     if check is True:
-        result.check_returncode()
+        try:
+            result.check_returncode()
+        except subprocess.CalledProcessError as e:
+            # try to convert generic subprocess.CalledProcessError to NscError, or log warning if running in idempotent mode
+            if (
+                all(el in cmd for el in ["nsc", "add", "export"])
+                and "already exports" in result.stderr
+            ):
+                if nats_nkeys_settings.NATS_NSC_RETRY_MODE == NatsNscRetryMode.STRICT:
+                    raise NscStreamExportConflict("Export already exists", e)
+                else:
+                    logger.warning(
+                        "Command %s returned error code %s. Stream export %s already exists.",
+                        cmd,
+                        e.returncode,
+                        e.stderr,
+                    )
+            elif (
+                all(el in cmd for el in ["nsc", "add"])
+                and "already exists" in result.stderr
+            ):
+                if nats_nkeys_settings.NATS_NSC_RETRY_MODE == NatsNscRetryMode.STRICT:
+                    raise NscConflict("Account already exists", e)
+                else:
+                    logger.warning(
+                        "Command %s returned error code %s. Resource already exists. %s",
+                        cmd,
+                        e.returncode,
+                        e.stderr,
+                    )
+            else:
+                raise NscError("nsc command exited with non-zero error code", e)
     return result
 
 
@@ -317,26 +344,19 @@ def nsc_add_app(
     app_name: str,
     obj: Union[NatsOrganizationApp, NatsRobotAppModel],
 ) -> Union[NatsOrganizationApp, NatsRobotAppModel]:
-    # try create user for account
-    try:
-        run_nsc_and_log_output(
-            [
-                "nsc",
-                "add",
-                "user",
-                "--account",
-                account_name,
-                "--name",
-                app_name,
-            ]
-        )
-    except subprocess.CalledProcessError as e:
-        # nsc add account command returned "Error: the account "<name>" already exists"
-        # we can proceed to saving output of `nsc describe account <name> --json``
-        if "already exists" in e.stderr:
-            pass
-        # re-raise other errors
-        raise e
+
+    run_nsc_and_log_output(
+        [
+            "nsc",
+            "add",
+            "user",
+            "--account",
+            account_name,
+            "--name",
+            app_name,
+        ]
+    )
+
     # update app permissions (if needed)
     base_cmd = ["nsc", "edit", "user", "--account", account_name, "--name", app_name]
     cmd = base_cmd.copy()
