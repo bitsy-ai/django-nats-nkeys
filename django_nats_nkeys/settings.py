@@ -1,4 +1,5 @@
 import os
+import enum
 from typing import List
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -6,7 +7,16 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 
 
+class NatsNscRetryMode(enum.Enum):
+    IDEMPOTENT = "IDEMPOTENT"
+    STRICT = "STRICT"
+
+
 class DjangoNatsNkeySettings:
+    @property
+    def NATS_NSC_RETRY_MODE(self) -> NatsNscRetryMode:
+        return NatsNscRetryMode(getattr(settings, "NATS_NSC_RETRY_MODE", "STRICT"))
+
     @property
     def NATS_NSC_DATA_DIR(self) -> str:
         """

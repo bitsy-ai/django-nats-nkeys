@@ -62,6 +62,14 @@ Settings
 `NATS_NKEYS_EXPORT_DIR` (default: `".nats/"`)
 `NATS_NKEYS_OPERATOR_NAME` (default: `"DjangoOperator"`)
 
+### Retry Mode
+
+`NATS_NSC_RETRY_MODE` (default "STRICT", allowed values: "STRICT" or "IDEMPOTENT")
+
+In `STRICT` mode, `django_nats_nkey.errors.NscConflict` will be raised if `nsc add ...` command returns an "already exists" error. You are responsible for implementing a separate process to handle eventual consistency between Django models and nsc environment.
+
+In `IDEMPOTENT` mode, conflict is logged at the WARNING level but no `Exception` is raised. In this mode, `nsc add` command may be retried many times and will be a no-op if resource already exists.
+
 
 ### Organization Models
 * Based on [Django organizations](https://github.com/bennylope/django-organizations)
