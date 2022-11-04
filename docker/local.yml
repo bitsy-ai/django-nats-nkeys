@@ -1,7 +1,7 @@
 version: "3"
 
 volumes:
-  local_postgres_data: {}
+  local_django_nats_nkeys_postgres_data: {}
 services:
   django: &django # enables use of pdb
     hostname: django
@@ -32,7 +32,7 @@ services:
     image: postgres:14
     container_name: django_nats_nkeys_postgres
     volumes:
-      - local_postgres_data:/var/lib/postgresql/data:z
+      - local_django_nats_nkeys_postgres_data:/var/lib/postgresql/data:z
     env_file:
       - test.env
     ports:
