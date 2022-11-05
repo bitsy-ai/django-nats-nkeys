@@ -99,4 +99,4 @@ In `IDEMPOTENT` mode, conflict is logged at the WARNING level but no `Exception`
 
 ### App Models
 
-`NATS_APP_MODEL` (default: `[ "django_nats_nkey.NatsOrganizationApp" , "django_nats_nkeys.NatsRobotApp" ]`)
+`NATS_APP_MODELS` (default: `[ "django_nats_nkey.NatsOrganizationApp" , "django_nats_nkeys.NatsRobotApp" ]`)
