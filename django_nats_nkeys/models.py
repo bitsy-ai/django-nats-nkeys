@@ -186,9 +186,6 @@ class AbstractNatsOrganizationApp(AbstractNatsApp):
 
     objects = NatsOrganizationAppManager()
 
-    ORGANIZATION_USER_RELATED_NAME = "nats_organization_apps"
-    ORGANIZATION_RELATED_NAME = "nats_organization_apps"
-
     class Meta:
         abstract = True
         constraints = [
@@ -201,12 +198,12 @@ class AbstractNatsOrganizationApp(AbstractNatsApp):
     organization_user = models.ForeignKey(
         NatsOrganizationUser,
         on_delete=models.CASCADE,
-        related_name=ORGANIZATION_USER_RELATED_NAME,
+        related_name="%(app_label)s_%(class)s",
     )
     organization = models.ForeignKey(
         NatsOrganization,
         on_delete=models.CASCADE,
-        related_name=ORGANIZATION_RELATED_NAME,
+        related_name="%(app_label)s_%(class)s",
     )
 
     def generate_jwt(self) -> str:
