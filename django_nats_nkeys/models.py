@@ -66,6 +66,33 @@ class NatsOrganization(AbstractOrganization):
         NatsMessageExport, related_name="nats_organization_exports"
     )
 
+    jetstream_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable JetStream for all users/apps belonging to NatsOrganization account",
+    )
+
+    jetstream_max_mem = models.CharField(
+        default="1M",
+        max_length=32,
+        help_text="JetStream memory resource limits (shared across all users/apps beloning to NatsOrganization account)",
+    )
+
+    jetstream_max_file = models.CharField(
+        default="5M",
+        max_length=32,
+        help_text="JetStream file resource limits (shared across all users/apps beloning to NatsOrganization account)",
+    )
+
+    jetstream_max_streams = models.PositiveIntegerField(
+        default=10,
+        help_text="JetStream max number of streams (shared across all users/apps beloning to NatsOrganization account)",
+    )
+
+    jetstream_max_consumers = models.PositiveIntegerField(
+        default=10,
+        help_text="JetStream max number of consumers (shared across all users/apps beloning to NatsOrganization account)",
+    )
+
     def nsc_validate(self):
         from .services import nsc_validate
 

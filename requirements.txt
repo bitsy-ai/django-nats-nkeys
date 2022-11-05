@@ -4,24 +4,24 @@
 #
 #    pip-compile
 #
-asgiref==3.4.1
+asgiref==3.5.2
     # via django
 coolname==1.1.0
     # via django-nats-nkeys (setup.py)
-django==3.2.7
+django==3.2.16
     # via
     #   django-extensions
     #   django-nats-nkeys (setup.py)
     #   django-organizations
-django-extensions==3.2.0
+django-extensions==3.2.1
     # via django-nats-nkeys (setup.py)
 django-organizations==2.0.2
     # via django-nats-nkeys (setup.py)
-psycopg2==2.9.1
+psycopg2==2.9.5
     # via django-nats-nkeys (setup.py)
-pytz==2021.1
+pytz==2022.6
     # via django
 six==1.16.0
     # via django-organizations
-sqlparse==0.4.2
+sqlparse==0.4.3
     # via django

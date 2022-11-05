@@ -1,11 +1,26 @@
 from django.dispatch import receiver
-from django.db.models.signals import m2m_changed
+from django.db.models.signals import m2m_changed, post_save
 
-from .services import nsc_add_import, run_nsc_and_log_output, save_describe_json
-from .models import NatsMessageExport, NatsMessageExportType
+from .services import (
+    nsc_add_import,
+    run_nsc_and_log_output,
+    save_describe_json,
+    nsc_jetstream_update,
+)
+from .models import NatsMessageExportType
 from .settings import nats_nkeys_settings
 
 NatsOrganization = nats_nkeys_settings.get_nats_account_model()
+
+
+@receiver(post_save, sender=NatsOrganization)
+def nats_organization_jetstream(
+    sender, instance, created, update_fields=None, **kwargs
+):
+    # update jetstream
+    if update_fields is not None:
+        if any("jetstream" in field for field in update_fields):
+            nsc_jetstream_update(instance)
 
 
 @receiver(m2m_changed, sender=NatsOrganization.exports.through)

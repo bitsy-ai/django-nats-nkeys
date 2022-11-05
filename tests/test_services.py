@@ -78,6 +78,23 @@ class TestServices(TestCase):
         assert org.nsc_validate().ok() is True
         assert org_user.nsc_validate().ok() is True
 
+    def test_enable_jetstream_organization(self):
+        before_describe_json = nsc_describe_json(self.org.name)
+        self.org.jetstream_enabled = True
+        self.org.save(update_fields=["jetstream_enabled"])
+
+        after_describe_json = nsc_describe_json(self.org.name)
+        assert self.org.json == after_describe_json
+        assert self.org.json != before_describe_json
+        assert (
+            self.org.json.get("nats", {}).get("limits", {}).get("consumer")
+            == self.org.jetstream_max_consumers
+        )
+        assert (
+            self.org.json.get("nats", {}).get("limits", {}).get("streams")
+            == self.org.jetstream_max_streams
+        )
+
     def test_create_org_app(self):
         org_user = self.org_user
         app = self.app

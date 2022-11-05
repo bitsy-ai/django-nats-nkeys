@@ -65,6 +65,31 @@ def create_organization(
     return organization
 
 
+def nsc_jetstream_update(org: NatsOrganization):
+    run_nsc_and_log_output(
+        [
+            "nsc",
+            "edit",
+            "account",
+            "--name",
+            org.name,
+            "--js-mem-storage",
+            org.jetstream_max_mem,
+            "--js-disk-storage",
+            org.jetstream_max_file,
+            "--js-streams",
+            str(org.jetstream_max_streams),
+            "--js-consumer",
+            str(org.jetstream_max_consumers),
+        ]
+    )
+    # push local changes to remote NATs resolver
+    nsc_push(account=org.name)
+
+    # describe the account and update organization's json representation
+    save_describe_json(org.name, org)
+
+
 def nsc_add_account(
     obj: Union[NatsOrganization, NatsRobotAccountModel]
 ) -> Union[NatsOrganization, NatsRobotAccountModel]:
@@ -77,7 +102,7 @@ def nsc_add_account(
     # push local changes to remote NATs resolver
     nsc_push(account=obj.name)
 
-    # describe the account and update objanization's json represetnation
+    # describe the account and update organization's json representation
     save_describe_json(obj.name, obj)
     return obj
 
