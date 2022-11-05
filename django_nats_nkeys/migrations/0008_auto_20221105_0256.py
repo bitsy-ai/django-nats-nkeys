@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_nats_nkeys', '0007_auto_20221104_2311'),
+        ("django_nats_nkeys", "0007_auto_20221104_2311"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='natsorganizationapp',
-            name='bearer',
+            model_name="natsorganizationapp",
+            name="bearer",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='natsorganizationuser',
-            name='bearer',
+            model_name="natsorganizationuser",
+            name="bearer",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='natsrobotapp',
-            name='bearer',
+            model_name="natsrobotapp",
+            name="bearer",
             field=models.BooleanField(default=False),
         ),
     ]

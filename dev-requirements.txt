@@ -79,6 +79,8 @@ packaging==21.3
     #   pytest
     #   sphinx
     #   tox
+paho-mqtt==1.6.1
+    # via -r dev-requirements.in
 pathspec==0.10.1
     # via black
 pkginfo==1.8.3

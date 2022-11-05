@@ -197,6 +197,11 @@ class NatsOrganizationApp(AbstractNatsApp):
         related_name="nats_apps",
     )
 
+    def generate_creds(self) -> str:
+        from django_nats_nkeys.services import nsc_generate_creds
+
+        return nsc_generate_creds(self.organization.name, self.app_name)
+
     def nsc_validate(self):
         from .services import nsc_validate
 

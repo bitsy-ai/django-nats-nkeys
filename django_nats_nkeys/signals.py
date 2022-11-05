@@ -3,6 +3,7 @@ from django.db.models.signals import m2m_changed, post_save
 
 from .services import (
     nsc_add_import,
+    nsc_bearer_auth_enable,
     run_nsc_and_log_output,
     save_describe_json,
     nsc_jetstream_update,
@@ -11,6 +12,16 @@ from .models import NatsMessageExportType
 from .settings import nats_nkeys_settings
 
 NatsOrganization = nats_nkeys_settings.get_nats_account_model()
+NatsOrganizationApp = nats_nkeys_settings.get_nats_organization_app_model()
+
+
+@receiver(post_save, sender=NatsOrganizationApp)
+def nats_app_bearer_auth_enabled(
+    sender, instance, created, update_fields=None, **kwargs
+):
+    if update_fields is not None:
+        if "bearer" in update_fields and instance.bearer == True:
+            nsc_bearer_auth_enable(instance)
 
 
 @receiver(post_save, sender=NatsOrganization)

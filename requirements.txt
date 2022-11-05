@@ -17,6 +17,12 @@ django-extensions==3.2.1
     # via django-nats-nkeys (setup.py)
 django-organizations==2.0.2
     # via django-nats-nkeys (setup.py)
+ed25519==1.5
+    # via nkeys
+nats-py[nkeys]==2.2.0
+    # via django-nats-nkeys (setup.py)
+nkeys==0.1.0
+    # via nats-py
 psycopg2==2.9.5
     # via django-nats-nkeys (setup.py)
 pytz==2022.6
