@@ -74,6 +74,7 @@ class TestBearerAuthentication(TestCase):
                 nc = await nats.connect(
                     TEST_NATS_URI, user_credentials=os.path.join(d, filename)
                 )
+                assert nc.is_connected
 
     def test_generate_creds_idempotent(self):
         # unless a JWT component changes, generate creds should be idempotent
