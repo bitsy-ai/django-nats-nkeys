@@ -1,4 +1,5 @@
 DIST ?= dist/
+BUILD_DIR ?= build/
 PIP ?= pip
 PYTHON ?= python
 PYTHON_VERSION ?= python3.8
@@ -7,10 +8,14 @@ VENV_BIN ?= $(VENV)/bin
 SRC_DIR ?= django_nats_nkeys
 TEST_DIR ?= tests
 
+
 clean-venv:
 	rm -rf $(VENV)
 clean-dist: ## remove dist artifacts
 	rm -rf $(DIST)
+
+clean-build:
+	rm -rf $(BUILD_DIR)
 
 clean-pyc: ## remove Python file artifacts
 	find . -name '*.pyc' -exec rm -f {} +
@@ -21,7 +26,7 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -rf {} +
 
-clean: clean-dist clean-pyc
+clean: clean-dist clean-pyc clean-build
 
 clean-operator:
 	sudo chown -R $(USER) .
