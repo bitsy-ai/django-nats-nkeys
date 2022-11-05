@@ -113,6 +113,8 @@ class AbstractNatsApp(models.Model):
         max_length=255, help_text="Output of `nsc describe account`", default=dict
     )
 
+    bearer = models.BooleanField(default=False)
+
     allow_pub = models.CharField(
         max_length=255,
         null=True,
