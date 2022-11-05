@@ -53,26 +53,18 @@ class TestBearerAuthentication(TestCase):
 
         cls.app_name = generate_slug(3)
 
-        cls.nonce_app = NatsOrganizationApp.objects.create_nsc(
+        cls.app = NatsOrganizationApp.objects.create_nsc(
             app_name=cls.app_name,
             organization_user=cls.org_user,
             organization=cls.org_user.organization,
         )
-
-        # MQTT clients can't receive and then send back a signed nonce, but we can enable using the JWT as a bearer token
-        # cls.bearer_app = NatsOrganizationApp.objects.create_nsc(
-        #     app_name=cls.app_name,
-        #     organization_user=cls.org_user,
-        #     organization=cls.org_user.organization,
-        #     bearer=True,  # allow JWT to be used as a bearer token
-        # )
 
     async def test_bearer_token_enable(self):
         # NATS clients are required to sign a nonce sent by the server using their private key
         # this is the default authentication behavior
 
         # test nonce_app can connect to NATS server
-        creds = self.nonce_app.generate_creds()
+        creds = self.app.generate_creds()
 
         # write nkey to temporary file
         with tempfile.NamedTemporaryFile("w+") as f:
@@ -82,19 +74,19 @@ class TestBearerAuthentication(TestCase):
             nc = await nats.connect(TEST_NATS_URI, user_credentials=f.name)
             await nc.close()
 
-            # allow JWT to be used as bearer token
-            self.nonce_app.bearer = True
-            sync_to_async(self.nonce_app.save)(update_fields=["bearer"])
+            # MQTT clients can't receive and then send back a signed nonce, but we can enable using the JWT as a bearer token
+            self.app.bearer = True
+            sync_to_async(self.app.save)(update_fields=["bearer"])
 
-            creds2 = self.nonce_app.generate_creds()
+            creds2 = self.app.generate_creds()
             assert creds2 == creds
             # verify nkey is still accepted by nats server after enabling bearer authentication
             nc = await nats.connect(TEST_NATS_URI, user_credentials=f.name)
             await nc.close()
 
-            # verify jwt can be used to establish mqtt connection
+            # verify jwt can be used as a bearer token to establish mqtt connection
             mqttc = mqtt.Client()
-            mqttc.username_pw_set("testuser", creds2)
+            mqttc.username_pw_set("anyusernameisvalid", creds2)
             mqttc.connect("nats", TEST_MQTT_PORT)
 
 
