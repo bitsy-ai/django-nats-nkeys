@@ -178,7 +178,7 @@ class NatsOrganizationUser(AbstractOrganizationUser, AbstractNatsApp):
         return nsc_validate(account_name=self.organization.name)
 
 
-class NatsOrganizationApp(AbstractNatsApp):
+class AbstractNatsOrganizationApp(AbstractNatsApp):
     """
     Corresponds to a NATS user/client within an Account group
     https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts
@@ -190,6 +190,7 @@ class NatsOrganizationApp(AbstractNatsApp):
     ORGANIZATION_RELATED_NAME = "nats_organization_apps"
 
     class Meta:
+        abstract = True
         constraints = [
             models.UniqueConstraint(
                 fields=["app_name", "organization_user"],
@@ -258,6 +259,10 @@ class NatsOrganizationApp(AbstractNatsApp):
         from .services import nsc_validate
 
         return nsc_validate(account_name=self.organization.name)
+
+
+class NatsOrganizationApp(AbstractNatsOrganizationApp):
+    pass
 
 
 class NatsOrganizationOwner(AbstractOrganizationOwner):
