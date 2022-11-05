@@ -1,7 +1,9 @@
 import zipfile
 import io
+from dataclasses import dataclass
 from typing import Tuple
 from django.db import models
+
 from organizations.abstract import (
     AbstractOrganization,
     AbstractOrganizationUser,
@@ -178,6 +180,16 @@ class NatsOrganizationUser(AbstractOrganizationUser, AbstractNatsApp):
         return nsc_validate(account_name=self.organization.name)
 
 
+@dataclass(init=True, repr=True)
+class NatsCredsZipfile:
+    data: bytes
+    creds_filename: str
+    jwt_filename: str
+
+    def filenames(self) -> Tuple[str]:
+        return (self.creds_filename, self.jwt_filename)
+
+
 class AbstractNatsOrganizationApp(AbstractNatsApp):
     """
     Corresponds to a NATS user/client within an Account group
@@ -240,17 +252,25 @@ class AbstractNatsOrganizationApp(AbstractNatsApp):
 
         return nsc_generate_creds(self.organization.name, self.app_name)
 
-    def generate_creds_zip(self, filename="nats.creds.zip") -> Tuple[str, bytes]:
+    def generate_creds_zip(
+        self, creds_filename="nats.creds", jwt_filename="nats.jwt"
+    ) -> NatsCredsZipfile:
         """
         Returns a Tuple of (filename, compressed bytes)
         """
         creds = self.generate_creds()
+        jwt = self.generate_jwt()
         # do not write sensitive credentials to disk
         # instead, write to memory buffer
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "a") as zip_obj:
-            zip_obj.writestr(filename, creds)
-        return filename, zip_buffer.getvalue()
+            zip_obj.writestr(creds_filename, creds)
+            zip_obj.writestr(jwt_filename, jwt)
+        return NatsCredsZipfile(
+            data=zip_buffer.getvalue(),
+            creds_filename=creds_filename,
+            jwt_filename=jwt_filename,
+        )
 
     def nsc_validate(self):
         from .services import nsc_validate

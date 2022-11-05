@@ -63,18 +63,29 @@ class TestBearerAuthentication(TestCase):
         )
 
     async def test_generate_creds_zip(self):
-        filename, zipfiledata = self.app.generate_creds_zip()
+        zipfileobj = self.app.generate_creds_zip()
         with tempfile.NamedTemporaryFile() as f:
-            f.write(zipfiledata)
+            f.write(zipfileobj.data)
             with tempfile.TemporaryDirectory() as d:
                 with zipfile.ZipFile(f, "r") as z:
                     z.extractall(d)
 
                 # test nats connection
                 nc = await nats.connect(
-                    TEST_NATS_URI, user_credentials=os.path.join(d, filename)
+                    TEST_NATS_URI,
+                    user_credentials=os.path.join(d, zipfileobj.creds_filename),
                 )
                 assert nc.is_connected
+
+                # test mqtt connection
+                jwt = open(os.path.join(d, zipfileobj.jwt_filename), "r").read()
+                mqttc = mqtt.Client(self.app_name, clean_session=True)
+                mqttc.username_pw_set("anyusernameisvalid", jwt)
+                mqttc.connect("nats", TEST_MQTT_PORT)
+                mqttc.loop_start()
+
+                msg = mqttc.publish("testing/temperature", payload=b"90")
+                assert msg.rc == 0
 
     def test_generate_creds_idempotent(self):
         # unless a JWT component changes, generate creds should be idempotent
@@ -107,10 +118,6 @@ class TestBearerAuthentication(TestCase):
         assert creds != creds2
         assert jwt2 != jwt
 
-        # import pdb
-
-        # pdb.set_trace()
-
         mqttc = mqtt.Client(self.app_name, clean_session=True)
         mqttc.username_pw_set("anyusernameisvalid", jwt2)
         mqttc.connect("nats", TEST_MQTT_PORT)
@@ -130,7 +137,6 @@ class TestBearerAuthentication(TestCase):
             organization=self.org_user.organization,
             bearer=True,
         )
-
         jwt = self.app.generate_jwt()
 
         # verify jwt can be used as a bearer token to establish mqtt connection
