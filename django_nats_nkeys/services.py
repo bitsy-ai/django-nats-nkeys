@@ -65,6 +65,24 @@ def create_organization(
     return organization
 
 
+def nsc_bearer_auth_enable(app: NatsOrganizationApp):
+    run_nsc_and_log_output(
+        [
+            "nsc",
+            "edit",
+            "account",
+            "--name",
+            app.organization.name,
+            "--user",
+            app.app_name,
+        ]
+    )
+    # push local changes to remote NATs resolver
+    nsc_push(account=app.organization.name)
+    # describe the account and update organization's json representation
+    save_describe_json(app.organization.name, app, app_name=app.app_name)
+
+
 def nsc_jetstream_update(org: NatsOrganization):
     run_nsc_and_log_output(
         [

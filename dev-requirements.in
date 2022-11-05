@@ -3,6 +3,7 @@ black
 bump2version
 django-environ
 freezegun
+paho-mqtt
 pytest
 pytest-cov
 pytest-django

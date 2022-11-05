@@ -1,4 +1,7 @@
 import pytest
+import tempfile
+from asgiref.sync import async_to_sync, sync_to_async
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
@@ -12,6 +15,8 @@ from django_nats_nkeys.models import (
     NatsOrganizationUser,
 )
 from coolname import generate_slug
+import nats
+import paho.mqtt.client as mqtt
 
 from django_nats_nkeys.services import (
     create_organization,
@@ -22,8 +27,70 @@ from django_nats_nkeys.services import (
 
 User = get_user_model()
 
+TEST_NATS_URI = "nats://nats:4223"
+TEST_MQTT_PORT = 1883
 
-class TestServices(TestCase):
+
+class TestBearerAuthentication(TestCase):
+    """
+    Tests for AbstractNatsApp.bearer authentication
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create(
+            email="admin@test.com", password="testing1234", is_superuser=False
+        )
+        cls.org_name = generate_slug(3)
+        cls.org = create_organization(
+            cls.user,
+            cls.org_name,
+            org_user_defaults={"is_admin": True},
+        )
+        cls.org_user = NatsOrganizationUser.objects.get(user=cls.user)
+        cls.org_owner = NatsOrganizationOwner.objects.get(organization=cls.org)
+
+        cls.app_name = generate_slug(3)
+
+        cls.app = NatsOrganizationApp.objects.create_nsc(
+            app_name=cls.app_name,
+            organization_user=cls.org_user,
+            organization=cls.org_user.organization,
+        )
+
+    async def test_bearer_token_enable(self):
+        # NATS clients are required to sign a nonce sent by the server using their private key
+        # this is the default authentication behavior
+
+        # test nonce_app can connect to NATS server
+        creds = self.app.generate_creds()
+
+        # write nkey to temporary file
+        with tempfile.NamedTemporaryFile("w+") as f:
+            f.write(creds)
+            f.flush()
+            # verify nkey is accepted by nats server
+            nc = await nats.connect(TEST_NATS_URI, user_credentials=f.name)
+            await nc.close()
+
+            # MQTT clients can't receive and then send back a signed nonce, but we can enable using the JWT as a bearer token
+            self.app.bearer = True
+            sync_to_async(self.app.save)(update_fields=["bearer"])
+
+            creds2 = self.app.generate_creds()
+            assert creds2 == creds
+            # verify nkey is still accepted by nats server after enabling bearer authentication
+            nc = await nats.connect(TEST_NATS_URI, user_credentials=f.name)
+            await nc.close()
+
+            # verify jwt can be used as a bearer token to establish mqtt connection
+            mqttc = mqtt.Client()
+            mqttc.username_pw_set("anyusernameisvalid", creds2)
+            mqttc.connect("nats", TEST_MQTT_PORT)
+
+
+class TestSharedServices(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

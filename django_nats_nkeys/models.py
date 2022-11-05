@@ -113,6 +113,8 @@ class AbstractNatsApp(models.Model):
         max_length=255, help_text="Output of `nsc describe account`", default=dict
     )
 
+    bearer = models.BooleanField(default=False)
+
     allow_pub = models.CharField(
         max_length=255,
         null=True,
@@ -194,6 +196,11 @@ class NatsOrganizationApp(AbstractNatsApp):
         on_delete=models.CASCADE,
         related_name="nats_apps",
     )
+
+    def generate_creds(self) -> str:
+        from django_nats_nkeys.services import nsc_generate_creds
+
+        return nsc_generate_creds(self.organization.name, self.app_name)
 
     def nsc_validate(self):
         from .services import nsc_validate

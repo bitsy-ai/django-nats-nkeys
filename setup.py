@@ -14,6 +14,7 @@ install_requires = [
     "psycopg2",
     "django-extensions~=3.2.0",
     "django-organizations~=2.0.2",
+    "nats-py[nkeys]~=2.2.0",
 ]
 
 extras = {"drf": ["djangorestframework~=3.13.1"]}
