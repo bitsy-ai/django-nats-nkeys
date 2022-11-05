@@ -70,11 +70,12 @@ def nsc_bearer_auth_enable(app: NatsOrganizationApp):
         [
             "nsc",
             "edit",
-            "account",
-            "--name",
+            "user",
+            "--account",
             app.organization.name,
-            "--user",
+            "--name",
             app.app_name,
+            "--bearer",
         ]
     )
     # push local changes to remote NATs resolver
@@ -105,7 +106,7 @@ def nsc_jetstream_update(org: NatsOrganization):
     nsc_push(account=org.name)
 
     # describe the account and update organization's json representation
-    save_describe_json(org.name, org)
+    return save_describe_json(org.name, org)
 
 
 def nsc_add_account(
@@ -121,8 +122,7 @@ def nsc_add_account(
     nsc_push(account=obj.name)
 
     # describe the account and update organization's json representation
-    save_describe_json(obj.name, obj)
-    return obj
+    return save_describe_json(obj.name, obj)
 
 
 def nsc_pull(account=None, force=False) -> subprocess.CompletedProcess:

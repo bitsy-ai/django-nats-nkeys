@@ -47,6 +47,7 @@ class TestBearerAuthentication(TestCase):
             cls.user,
             cls.org_name,
             org_user_defaults={"is_admin": True},
+            org_defaults={"jetstream_enabled": True},
         )
         cls.org_user = NatsOrganizationUser.objects.get(user=cls.user)
         cls.org_owner = NatsOrganizationOwner.objects.get(organization=cls.org)
@@ -59,35 +60,71 @@ class TestBearerAuthentication(TestCase):
             organization=cls.org_user.organization,
         )
 
-    async def test_bearer_token_enable(self):
+    def test_generate_creds_idempotent(self):
+        # unless a JWT component changes, generate creds should be idempotent
+        creds1 = self.app.generate_creds()
+        creds2 = self.app.generate_creds()
+        creds3 = self.app.generate_creds()
+        assert creds1 == creds2 == creds3
+
+    def test_bearer_token_enable_existing(self):
+        """
+        Test enabling bearer authentication for existing app
+        """
         # NATS clients are required to sign a nonce sent by the server using their private key
         # this is the default authentication behavior
 
         # test nonce_app can connect to NATS server
         creds = self.app.generate_creds()
+        jwt = self.app.generate_jwt()
 
-        # write nkey to temporary file
-        with tempfile.NamedTemporaryFile("w+") as f:
-            f.write(creds)
-            f.flush()
-            # verify nkey is accepted by nats server
-            nc = await nats.connect(TEST_NATS_URI, user_credentials=f.name)
-            await nc.close()
+        # MQTT clients can't receive and then send back a signed nonce, but we can enable using the JWT as a bearer token
+        self.app.bearer = True
+        self.app.save(update_fields=["bearer"])
+        self.app.refresh_from_db()
 
-            # MQTT clients can't receive and then send back a signed nonce, but we can enable using the JWT as a bearer token
-            self.app.bearer = True
-            sync_to_async(self.app.save)(update_fields=["bearer"])
+        assert self.app.json.get("nats", {}).get("bearer_token") == True
+        creds2 = self.app.generate_creds()
+        jwt2 = self.app.generate_jwt()
 
-            creds2 = self.app.generate_creds()
-            assert creds2 == creds
-            # verify nkey is still accepted by nats server after enabling bearer authentication
-            nc = await nats.connect(TEST_NATS_URI, user_credentials=f.name)
-            await nc.close()
+        # flipping the bearer authentication bit will generate a different JWT, since NATS JWTs incorporate capabilities of entity
+        assert creds != creds2
+        assert jwt2 != jwt
 
-            # verify jwt can be used as a bearer token to establish mqtt connection
-            mqttc = mqtt.Client()
-            mqttc.username_pw_set("anyusernameisvalid", creds2)
-            mqttc.connect("nats", TEST_MQTT_PORT)
+        # import pdb
+
+        # pdb.set_trace()
+
+        mqttc = mqtt.Client(self.app_name, clean_session=True)
+        mqttc.username_pw_set("anyusernameisvalid", jwt2)
+        mqttc.connect("nats", TEST_MQTT_PORT)
+        mqttc.loop_start()
+
+        msg = mqttc.publish("testing/temperature", payload=b"90")
+        assert msg.rc == 0
+
+    def test_bearer_token_enable_new(self):
+        """
+        Test enabling bearer authentication for new app
+        """
+        app_name = generate_slug(3)
+        app = NatsOrganizationApp.objects.create_nsc(
+            app_name=app_name,
+            organization_user=self.org_user,
+            organization=self.org_user.organization,
+            bearer=True,
+        )
+
+        jwt = self.app.generate_jwt()
+
+        # verify jwt can be used as a bearer token to establish mqtt connection
+        mqttc = mqtt.Client(app_name, clean_session=True)
+        mqttc.username_pw_set("anyusernameisvalid", jwt)
+        mqttc.connect("nats", TEST_MQTT_PORT, keepalive=1)
+        mqttc.loop_start()
+
+        msg = mqttc.publish("testing/temperature", payload=b"90")
+        assert msg.rc == 0
 
 
 class TestSharedServices(TestCase):
