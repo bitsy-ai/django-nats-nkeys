@@ -42,6 +42,5 @@ try:
             model = NatsRobotApp
             fields = "__all__"
 
-
 except ImportError:
     pass
