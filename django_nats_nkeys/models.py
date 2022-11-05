@@ -1,4 +1,6 @@
-import subprocess
+import zipfile
+import io
+from typing import Tuple
 from django.db import models
 from organizations.abstract import (
     AbstractOrganization,
@@ -234,6 +236,18 @@ class NatsOrganizationApp(AbstractNatsApp):
         from django_nats_nkeys.services import nsc_generate_creds
 
         return nsc_generate_creds(self.organization.name, self.app_name)
+
+    def generate_creds_zip(self, filename="nats.creds.zip") -> Tuple[str, bytes]:
+        """
+        Returns a Tuple of (filename, compressed bytes)
+        """
+        creds = self.generate_creds()
+        # do not write sensitive credentials to disk
+        # instead, write to memory buffer
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "a") as zip_obj:
+            zip_obj.writestr(filename, creds)
+        return filename, zip_buffer.getvalue()
 
     def nsc_validate(self):
         from .services import nsc_validate

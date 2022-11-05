@@ -1,5 +1,7 @@
 import pytest
 import tempfile
+import zipfile
+import os
 from asgiref.sync import async_to_sync, sync_to_async
 
 from django.test import TestCase
@@ -59,6 +61,20 @@ class TestBearerAuthentication(TestCase):
             organization_user=cls.org_user,
             organization=cls.org_user.organization,
         )
+
+    async def test_generate_creds_zip(self):
+        filename, zipfiledata = self.app.generate_creds_zip()
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(zipfiledata)
+            with tempfile.TemporaryDirectory() as d:
+                with zipfile.ZipFile(f, "r") as z:
+                    z.extractall(d)
+
+                # test nats connection
+                nc = await nats.connect(
+                    TEST_NATS_URI, user_credentials=os.path.join(d, filename)
+                )
+                assert nc.is_connected
 
     def test_generate_creds_idempotent(self):
         # unless a JWT component changes, generate creds should be idempotent
