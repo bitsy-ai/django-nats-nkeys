@@ -35,12 +35,16 @@ class NatsMessageExport(models.Model):
 
 class NatsOrganizationManager(OrgManager):
     def create_nsc(self, **kwargs):
-        from django_nats_nkeys.services import nsc_add_account
+        from django_nats_nkeys.services import nsc_add_account, nsc_jetstream_update
 
         # create django model
         org = self.create(**kwargs)
         # try create nsc account
-        return nsc_add_account(org)
+        org = nsc_add_account(org)
+        # should we enable jetstream?
+        if org.jetstream_enabled:
+            return nsc_jetstream_update(org)
+        return org
 
 
 class ActiveNatsOrganizationManager(NatsOrganizationManager, ActiveOrgManager):
@@ -197,7 +201,36 @@ class NatsOrganizationApp(AbstractNatsApp):
         related_name="nats_apps",
     )
 
+    def generate_jwt(self) -> str:
+        """
+        Extracts base64-encoded JWT string from nkey credential
+        Intended for use as bearer auth token in MQTT client
+        """
+        creds = self.generate_creds()
+        parts = creds.split("\n")
+        if len(parts) > 2:
+            return creds.split("\n")[1]
+        return creds
+
     def generate_creds(self) -> str:
+        """
+        Generates full credential will format:
+
+        -----BEGIN NATS USER JWT-----
+        <jwt>
+        ------END NATS USER JWT------
+
+        ************************* IMPORTANT *************************
+        NKEY Seed printed below can be used to sign and prove identity.
+        NKEYs are sensitive and should be treated as secrets.
+
+        -----BEGIN USER NKEY SEED-----
+        <seed>
+        ------END USER NKEY SEED------
+
+        *************************************************************
+
+        """
         from django_nats_nkeys.services import nsc_generate_creds
 
         return nsc_generate_creds(self.organization.name, self.app_name)
