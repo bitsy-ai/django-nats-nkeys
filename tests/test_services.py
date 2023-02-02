@@ -169,6 +169,12 @@ class TestGetOrCreateOwnerUnits(TestCase):
         assert org_user == org_owner.organization_user
         assert org == org_user.organization
         assert org == org_owner.organization
+        created, (
+            org,
+            org_owner,
+            org_user,
+        ) = get_or_create_org_owner_units_for_authenticated_user(self.user)
+        assert created == False
 
 
 class TestSharedServices(TestCase):

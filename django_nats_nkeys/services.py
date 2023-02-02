@@ -83,9 +83,11 @@ def get_or_create_org_owner_units_for_authenticated_user(
         )
     return (
         False,
-        first_org_user.organization,
-        first_org_user.organization.owner,
-        first_org_user,
+        (
+            first_org_user.organization,
+            first_org_user.organization.owner,
+            first_org_user,
+        ),
     )
 
 
