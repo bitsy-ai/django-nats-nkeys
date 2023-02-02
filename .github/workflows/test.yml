@@ -28,7 +28,6 @@ jobs:
       - name: Wait for services
         run: |
           make docker-up-d
-          make wait-for-services
       - name: Run Pytest
         run: |
           make pytest
