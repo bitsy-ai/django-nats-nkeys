@@ -25,9 +25,12 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Run Pytest
+      - name: Wait for services
         run: |
           make docker-up-d
+          make wait-for-services
+      - name: Run Pytest
+        run: |
           make pytest
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
