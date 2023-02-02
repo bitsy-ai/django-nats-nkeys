@@ -19,9 +19,74 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 NatsOrganization = nats_nkeys_settings.get_nats_account_model()
 NatsOrganizationUser = nats_nkeys_settings.get_nats_user_model()
+NatsOrganizationOwner = nats_nkeys_settings.get_nats_organization_owner_model()
 NatsOrganizationApp = nats_nkeys_settings.get_nats_organization_app_model()
 NatsRobotAccountModel = nats_nkeys_settings.get_nats_robot_account_model()
 NatsRobotAppModel = nats_nkeys_settings.get_nats_robot_app_model()
+
+
+def create_org_owner_units_for_authenticated_user(
+    user: User,
+) -> Tuple[NatsOrganization, NatsOrganizationOwner, NatsOrganizationUser]:
+    org_name = generate_slug(3)
+    org = create_organization(
+        user,
+        org_name,
+        org_user_defaults={"is_admin": True},
+        org_defaults={"jetstream_enabled": True},
+    )
+    logger.info("Created organization %s", org)
+    org_user = NatsOrganizationUser.objects.get(user=user)
+    org_owner = NatsOrganizationOwner.objects.get(organization=org)
+    return (org, org_owner, org_user)
+
+
+def get_or_create_org_owner_units_for_authenticated_user(
+    user: User,
+) -> Tuple[bool, Tuple[NatsOrganization, NatsOrganizationOwner, NatsOrganizationUser]]:
+    """
+    Given an authenticated user, User model determined by django.contrib.auth.get_user_model()
+    Gets or creates the following model instances:
+    Org model - configured via NATS_ORGANIZATION_MODEL (default: NatsOrganization)
+    Org owner model - configured via NATS_ORGANIZATION_OWNER_MODEL (default: NatsOrganizationOwner)
+    Org user model - configured via NATS_ORGANIZATION_USER_MODEL (default: NatsOrganizationUser)
+    """
+    # is this user part of any organizations?
+    organization_users = NatsOrganizationUser.objects.filter(user=user).all()
+    org_user_model_str = nats_nkeys_settings.get_nats_user_model_string()
+    org_owner_model_str = nats_nkeys_settings.get_nats_organization_owner_model_string()
+    org_model_str = nats_nkeys_settings.get_nats_account_model_string()
+
+    logger.info(
+        "Found %s %s instances for user=%s",
+        organization_users.count(),
+        org_user_model_str,
+        user,
+    )
+    if organization_users.count() == 0:
+        logger.info(
+            "Creating new %s, %s, %s for user=%s",
+            org_model_str,
+            org_owner_model_str,
+            org_user_model_str,
+            user,
+        )
+        return (True, create_org_owner_units_for_authenticated_user(user))
+
+    first_org_user = organization_users.first()
+    if organization_users.count() > 1:
+        # we'll need to extend this pattern to support a user that belongs to multiple organizations, but let's cross that bridge (and get paid a toll) only when we need this
+        logger.warning(
+            "More than 1 %s instance found for user %s. django_nats_nkeys does not fully support a multi-organization model. Returning first org user found: %s",
+            org_user_model_str,
+            first_org_user,
+        )
+    return (
+        False,
+        first_org_user.organization,
+        first_org_user.organization.owner,
+        first_org_user,
+    )
 
 
 def create_organization(

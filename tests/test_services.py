@@ -25,6 +25,7 @@ from django_nats_nkeys.services import (
     nsc_describe_json,
     nsc_generate_creds,
     nsc_validate,
+    get_or_create_org_owner_units_for_authenticated_user,
 )
 
 User = get_user_model()
@@ -147,6 +148,27 @@ class TestBearerAuthentication(TestCase):
 
         msg = mqttc.publish("testing/temperature", payload=b"90")
         assert msg.rc == 0
+
+
+class TestGetOrCreateOwnerUnits(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create(
+            email="admin@test.com", password="testing1234", is_superuser=False
+        )
+
+    def get_or_create_org_owner_units_for_authenticated_user(self):
+        created, (
+            org,
+            org_owner,
+            org_user,
+        ) = get_or_create_org_owner_units_for_authenticated_user(self.user)
+        assert created == True
+        assert org_user.user == self.user
+        assert org_user == org_owner.organization_user
+        assert org == org_user.organization
+        assert org == org_owner.organization
 
 
 class TestSharedServices(TestCase):
