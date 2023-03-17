@@ -202,22 +202,7 @@ def nsc_pull(account=None, force=False) -> subprocess.CompletedProcess:
 
     if force is True:
         cmd.append("--overwrite-newer")
-    extra_args = [
-        "--keystore-dir",
-        nats_nkeys_settings.NATS_NSC_KEYSTORE_DIR,
-        "--config-dir",
-        nats_nkeys_settings.NATS_NSC_CONFIG_DIR,
-        "--data-dir",
-        nats_nkeys_settings.NATS_NSC_DATA_DIR,
-    ]
-    cmd = cmd + extra_args
-    result = subprocess.run(cmd, capture_output=True, encoding="utf8")
-    if result.stdout:
-        logger.info(result.stdout)
-
-    if result.stderr:
-        logger.error(result.stderr)
-    result.check_returncode()
+    result = run_nsc_and_log_output(cmd)
     return result
 
 
