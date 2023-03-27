@@ -1,4 +1,4 @@
-name: Test
+name: Tox Tests
 
 # Controls when the action will run.
 on:
@@ -17,6 +17,9 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
     # strategy:
     #   matrix:
     #     python-version: [3.9]
@@ -25,14 +28,19 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Wait for services
         run: |
-          make docker-up-d
-      - name: Run Pytest
+          make docker-up-ci
+          python -m pip install -r dev-requirements.txt
+      - name: Run Tox
         run: |
-          make pytest
+          tox
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -40,5 +48,4 @@ jobs:
           env_vars: OS,PYTHON
           name: codecov-umbrella
           fail_ci_if_error: false
-          path_to_write_report: ./coverage/codecov_report.txt
           verbose: true

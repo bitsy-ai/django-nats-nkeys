@@ -1,0 +1,38 @@
+version: "3"
+
+volumes:
+  local_django_nats_nkeys_postgres_data: {}
+services:
+  postgres:
+    hostname: postgres
+    image: postgres:14
+    container_name: django_nats_nkeys_postgres
+    volumes:
+      - local_django_nats_nkeys_postgres_data:/var/lib/postgresql/data:z
+    env_file:
+      - test.env
+    ports:
+      - "5433:5432"
+    networks:
+      - overlay
+
+  nats:
+    hostname: nats
+    container_name: django_nats_nkeys_nats
+    build:
+      dockerfile: nats.Dockerfile
+      context: .
+    volumes:
+      - ../.nats/:/etc/nats
+    command:
+      - -c
+      - /etc/nats/nats-server.conf
+      - --name
+      - localnats
+    ports:
+      - "4223:4223"
+    networks:
+      - overlay
+
+networks:
+  overlay:
