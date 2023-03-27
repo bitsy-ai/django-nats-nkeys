@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_nats_nkeys", "0006_natsrobotapp_unique_app_name_per_robot_account"),
     ]

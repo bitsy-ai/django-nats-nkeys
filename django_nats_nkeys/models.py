@@ -30,7 +30,6 @@ class NatsMessageExportType(models.TextChoices):
 
 
 class NatsMessageExport(models.Model):
-
     name = models.CharField(unique=True, max_length=255)
     subject_pattern = models.CharField(unique=True, max_length=255)
     public = models.BooleanField()
@@ -60,7 +59,6 @@ def _default_name():
 
 
 class NatsOrganization(AbstractOrganization):
-
     objects = NatsOrganizationManager()
     active = ActiveNatsOrganizationManager()
 
@@ -308,7 +306,6 @@ class NatsRobotAccountManager(models.Manager):
 
 
 class AbstractNatsRobotAccount(models.Model):
-
     objects = NatsRobotAccountManager()
 
     class Meta:

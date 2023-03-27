@@ -12,7 +12,7 @@ services:
     env_file:
       - test.env
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - overlay
 

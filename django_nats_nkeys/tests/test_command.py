@@ -28,7 +28,6 @@ class TestCommand(TestCase):
         call_command("nsc_pull")
 
     def test_nsc_operator_jwt(self):
-
         with tempfile.TemporaryDirectory() as d:
             operator_jwt = os.path.join(d, "operator.jwt")
             call_command("nsc_operator_jwt", "--export", operator_jwt)

@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_nats_nkeys", "0008_auto_20221105_0256"),
     ]

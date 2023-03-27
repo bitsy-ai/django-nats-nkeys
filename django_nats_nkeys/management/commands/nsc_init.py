@@ -7,7 +7,6 @@ from django_nats_nkeys.services import nsc_init_operator
 
 class Command(BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
-
         parser.add_argument(
             "--name",
             type=str,

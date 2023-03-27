@@ -28,7 +28,7 @@ USE_TZ = True
 # URLS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "django_nats_nkeys.tests.apps.urls"
 # https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 # WSGI_APPLICATION = "config.wsgi.application"
 # ASGI_APPLICATION = "config.asgi.application"
@@ -39,9 +39,16 @@ USE_TZ = True
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-db_config = env.db("DATABASE_URL")
-db_config["ENGINE"] = "django.db.backends.postgresql"
-DATABASES = {"default": db_config}
+DATABASES = {
+    "default": {
+        "USER": "debug",
+        "ENGINE": "django.db.backends.postgresql",
+        "PASSWORD": "debug",
+        "HOST": "postgres",
+        "PORT": 5432,
+        "NAME": "django",
+    }
+}
 
 TEMPLATES = [
     {
@@ -66,8 +73,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.sites",
     "django.contrib.staticfiles",
-    "tests",
-    "tests.apps.testapp",
+    "django_nats_nkeys.tests.apps.testapp",
     "django_extensions",
     "organizations",
     "django_nats_nkeys",

@@ -5,7 +5,6 @@ import django_nats_nkeys.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_nats_nkeys", "0001_initial"),
     ]
