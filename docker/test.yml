@@ -31,6 +31,7 @@ services:
       - localnats
     ports:
       - "4223:4223"
+      - "1883:1833"
     networks:
       - overlay
 

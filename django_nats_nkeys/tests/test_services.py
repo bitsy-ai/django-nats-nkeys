@@ -30,7 +30,8 @@ from django_nats_nkeys.services import (
 
 User = get_user_model()
 
-TEST_NATS_URI = "nats://nats:4223"
+TEST_NATS_URI = "nats://localhost:4223"
+TEST_NATS_HOST = "localhost"
 TEST_MQTT_PORT = 1883
 
 
@@ -82,7 +83,7 @@ class TestBearerAuthentication(TestCase):
                 jwt = open(os.path.join(d, zipfileobj.jwt_filename), "r").read()
                 mqttc = mqtt.Client(self.app_name, clean_session=True)
                 mqttc.username_pw_set("anyusernameisvalid", jwt)
-                mqttc.connect("nats", TEST_MQTT_PORT)
+                mqttc.connect(TEST_NATS_HOST, TEST_MQTT_PORT)
                 mqttc.loop_start()
 
                 msg = mqttc.publish("testing/temperature", payload=b"90")
@@ -110,7 +111,6 @@ class TestBearerAuthentication(TestCase):
         self.app.bearer = True
         self.app.save(update_fields=["bearer"])
         self.app.refresh_from_db()
-
         assert self.app.json.get("nats", {}).get("bearer_token") == True
         creds2 = self.app.generate_creds()
         jwt2 = self.app.generate_jwt()
@@ -121,7 +121,7 @@ class TestBearerAuthentication(TestCase):
 
         mqttc = mqtt.Client(self.app_name, clean_session=True)
         mqttc.username_pw_set("anyusernameisvalid", jwt2)
-        mqttc.connect("nats", TEST_MQTT_PORT)
+        mqttc.connect(TEST_NATS_HOST, TEST_MQTT_PORT)
         mqttc.loop_start()
 
         msg = mqttc.publish("testing/temperature", payload=b"90")
@@ -143,7 +143,7 @@ class TestBearerAuthentication(TestCase):
         # verify jwt can be used as a bearer token to establish mqtt connection
         mqttc = mqtt.Client(app_name, clean_session=True)
         mqttc.username_pw_set("anyusernameisvalid", jwt)
-        mqttc.connect("nats", TEST_MQTT_PORT, keepalive=1)
+        mqttc.connect(TEST_NATS_HOST, TEST_MQTT_PORT, keepalive=1)
         mqttc.loop_start()
 
         msg = mqttc.publish("testing/temperature", payload=b"90")

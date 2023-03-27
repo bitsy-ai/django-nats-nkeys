@@ -11,6 +11,8 @@ DATABASES = {
         "PASSWORD": "debug",
         "HOST": "localhost",
         "PORT": 5432,
-        "NAME": "django_test",
+        "NAME": "django",
     }
 }
+
+NATS_SERVER_URI = "nats://localhost:4223"
