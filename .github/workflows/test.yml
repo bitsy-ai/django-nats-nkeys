@@ -36,7 +36,7 @@ jobs:
         run: |
           wget https://github.com/nats-io/nsc/releases/download/2.7.1/nsc-linux-amd64.zip -O nsc-linux-amd64.zip
           sudo unzip nsc-linux-amd64.zip -d /usr/local/bin
-      - name: Wait for services
+      - name: Run Tox
         run: |
           make docker-up-ci
           python -m pip install -r dev-requirements.txt -r requirements.txt
@@ -46,9 +46,6 @@ jobs:
           python manage.py nsc_init --outdir "$PWD/.nats"
           docker-compose -f docker/test.yml restart nats
           python manage.py nsc_push
-          nsc env -o DjangoOperator
-      - name: Run Tox
-        run: |
           nsc env -o DjangoOperator
           tox
       - name: Upload coverage to Codecov
