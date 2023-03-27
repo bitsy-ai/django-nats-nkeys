@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_nats_nkeys", "0005_auto_20220814_2329"),
     ]

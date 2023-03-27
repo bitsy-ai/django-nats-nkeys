@@ -3,30 +3,6 @@ version: "3"
 volumes:
   local_django_nats_nkeys_postgres_data: {}
 services:
-  django: &django # enables use of pdb
-    hostname: django
-    stdin_open: true
-    tty: true
-    build:
-      context: ../
-      dockerfile: ./docker/django.Dockerfile
-    image: django_nats_nkeys
-    container_name: django_nats_nkeys
-    depends_on:
-      - postgres
-      - nats
-    volumes:
-      - ../:/workspace:z
-    ports:
-      - "8801:8000"
-    env_file:
-      - test.env
-    environment:
-      NKEYS_PATH: /workspace/.nats/keys
-      NSC_HOME: /workspace/.nats/config
-      NSC_STORE: /workspace/.nats/stores
-    command:
-      - ./start
   postgres:
     hostname: postgres
     image: postgres:14
@@ -36,7 +12,10 @@ services:
     env_file:
       - test.env
     ports:
-      - "5433:5432"
+      - "5432:5432"
+    networks:
+      - overlay
+
   nats:
     hostname: nats
     container_name: django_nats_nkeys_nats
@@ -53,3 +32,8 @@ services:
     ports:
       - "4223:4223"
       - "1883:1833"
+    networks:
+      - overlay
+
+networks:
+  overlay:

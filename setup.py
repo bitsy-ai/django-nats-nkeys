@@ -9,15 +9,15 @@ long_description: str = open(
     os.path.join(os.path.dirname(__file__), "README.md")
 ).read()
 install_requires = [
-    "coolname~=1.1.0",
-    "django>=3.2,<4",
+    "coolname",
+    "django",
     "psycopg2",
-    "django-extensions~=3.2.0",
-    "django-organizations~=2.0.2",
-    "nats-py[nkeys]~=2.2.0",
+    "django-extensions",
+    "django-organizations",
+    "nats-py[nkeys]",
 ]
 
-extras = {"drf": ["djangorestframework~=3.13.1"]}
+extras = {"drf": ["djangorestframework"]}
 python_requires = ">3.6.9"
 setup(
     name="django_nats_nkeys",
@@ -34,9 +34,12 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Framework :: Django",
         "Framework :: Django :: 3.1",
         "Framework :: Django :: 3.2",
+        "Framework :: Django :: 4.0",
+        "Framework :: Django :: 4.1",
     ],
     zip_safe=True,
     install_requires=install_requires,

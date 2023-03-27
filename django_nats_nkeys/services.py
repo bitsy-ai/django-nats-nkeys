@@ -401,7 +401,6 @@ def create_nats_sk_service(
 def nsc_describe_json(
     account_name: str, app_name: Optional[str] = None
 ) -> Dict[Any, Any]:
-
     if app_name is None:
         result = run_nsc_and_log_output(
             ["nsc", "describe", "account", "--name", account_name, "--json"]
@@ -428,7 +427,6 @@ def save_describe_json(
     obj: Union[NatsOrganization, NatsRobotAccountModel, NatsOrganizationUser],
     app_name: Optional[str] = None,
 ) -> Union[NatsOrganization, NatsRobotAccountModel]:
-
     obj.json = nsc_describe_json(account_name, app_name=app_name)
     obj.save()
     return obj
@@ -439,7 +437,6 @@ def nsc_add_app(
     app_name: str,
     obj: Union[NatsOrganizationApp, NatsRobotAppModel],
 ) -> Union[NatsOrganizationApp, NatsRobotAppModel]:
-
     run_nsc_and_log_output(
         [
             "nsc",

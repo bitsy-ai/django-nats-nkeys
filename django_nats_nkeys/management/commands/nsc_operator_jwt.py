@@ -8,7 +8,6 @@ from django_nats_nkeys.services import run_nsc_and_log_output
 
 class Command(BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
-
         parser.add_argument(
             "--import",
             type=str,

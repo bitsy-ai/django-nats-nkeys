@@ -8,7 +8,6 @@ import organizations.fields
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

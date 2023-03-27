@@ -1,4 +1,3 @@
--c requirements.txt
 black
 bump2version
 django-environ

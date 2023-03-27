@@ -32,7 +32,6 @@ def enable_jetstream(
     request: HttpRequest,
     queryset: QuerySet[Any],
 ):
-
     for org in queryset:
         org.jetstream_enabled = True
         # update_fields is required to trigger nsc account edit in signals.py
@@ -79,7 +78,6 @@ def enable_bearer_auth(
     request: HttpRequest,
     queryset: QuerySet[Any],
 ):
-
     for app in queryset:
         app.bearer = True
         # update_fields is required to trigger nsc user edit in signals.py

@@ -1,4 +1,4 @@
-name: Test
+name: Tox Tests
 
 # Controls when the action will run.
 on:
@@ -17,6 +17,9 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
     # strategy:
     #   matrix:
     #     python-version: [3.9]
@@ -25,14 +28,30 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Wait for services
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install nsc
         run: |
-          make docker-up-d
-      - name: Run Pytest
+          wget https://github.com/nats-io/nsc/releases/download/2.7.1/nsc-linux-amd64.zip -O nsc-linux-amd64.zip
+          sudo unzip nsc-linux-amd64.zip -d /usr/local/bin
+      - name: Run Tox
         run: |
-          make pytest
+          make docker-up-ci
+          python -m pip install -r dev-requirements.txt -r requirements.txt
+          export NSC_STORE="$PWD/.nats/stores"
+          export NSC_HOME="$PWD/.nats/config"
+          export NKEYS_PATH="$PWD/.nats/keys"
+          python manage.py nsc_init --outdir "$PWD/.nats"
+          docker-compose -f docker/test.yml restart nats
+          python manage.py nsc_push
+          docker-compose -f docker/test.yml restart nats
+          nsc env -o DjangoOperator
+          docker-compose -f docker/test.yml logs
+          tox
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -40,5 +59,4 @@ jobs:
           env_vars: OS,PYTHON
           name: codecov-umbrella
           fail_ci_if_error: false
-          path_to_write_report: ./coverage/codecov_report.txt
           verbose: true

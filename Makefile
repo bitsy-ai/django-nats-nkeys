@@ -111,3 +111,6 @@ docker-up-d:
 
 docker-up:
 	docker-compose -f docker/local.yml up
+
+docker-up-ci:
+	docker-compose -f docker/test.yml up -d

@@ -6,7 +6,6 @@ import django_nats_nkeys.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_nats_nkeys", "0002_auto_20220807_2036"),
     ]

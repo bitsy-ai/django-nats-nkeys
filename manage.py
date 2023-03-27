@@ -4,7 +4,9 @@ import sys
 from pathlib import Path
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.test")
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE", "django_nats_nkeys.tests.apps.settings.tox"
+    )
     # This allows easy placement of apps within the interior
     # django_nats_nkeys directory.
     current_path = Path(__file__).parent.resolve()
