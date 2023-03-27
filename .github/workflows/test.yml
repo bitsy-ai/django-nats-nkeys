@@ -42,9 +42,9 @@ jobs:
           python -m pip install -r dev-requirements.txt
       - name: Run Tox
         run: |
-          export NSC_STORE = "$PWD/.nats/stores"
-          export NSC_HOME = "$PWD/.nats/config"
-          export NKEYS_PATH = "$PWD/.nats/keys"
+          export NSC_STORE="$PWD/.nats/stores"
+          export NSC_HOME="$PWD/.nats/config"
+          export NKEYS_PATH="$PWD/.nats/keys"
           python manage.py nsc_init --outdir "$PWD/.nats"
           docker-compose -f docker/test.yml restart nats
           python manage.py nsc_push
