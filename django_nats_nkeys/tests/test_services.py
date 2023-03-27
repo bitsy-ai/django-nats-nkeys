@@ -143,7 +143,7 @@ class TestBearerAuthentication(TestCase):
         # verify jwt can be used as a bearer token to establish mqtt connection
         mqttc = mqtt.Client(app_name, clean_session=True)
         mqttc.username_pw_set("anyusernameisvalid", jwt)
-        mqttc.connect(TEST_NATS_HOST, TEST_MQTT_PORT, keepalive=1)
+        mqttc.connect(TEST_NATS_HOST, TEST_MQTT_PORT)
         mqttc.loop_start()
 
         msg = mqttc.publish("testing/temperature", payload=b"90")
