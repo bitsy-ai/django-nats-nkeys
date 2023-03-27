@@ -49,6 +49,7 @@ jobs:
           docker-compose -f docker/test.yml restart nats
           python manage.py nsc_push
           nsc env -o DjangoOperator
+          nsc env
           tox
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
