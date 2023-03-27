@@ -46,7 +46,9 @@ jobs:
           python manage.py nsc_init --outdir "$PWD/.nats"
           docker-compose -f docker/test.yml restart nats
           python manage.py nsc_push
+          docker-compose -f docker/test.yml restart nats
           nsc env -o DjangoOperator
+          docker-compose -f docker/test.yml logs
           tox
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
